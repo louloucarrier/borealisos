@@ -1,5 +1,3 @@
-local basalt = dofile("basalt.lua")
-
 local monitor = peripheral.wrap("left")
 
 if not monitor then
@@ -8,13 +6,15 @@ end
 
 local width, height = monitor.getSize()
 
-local page = "home"
+local buttons = {}
 
 -- ==================================================
--- AFFICHAGE
+-- OUTILS
 -- ==================================================
 
 local function clear()
+    monitor.setBackgroundColor(colors.black)
+    monitor.setTextColor(colors.white)
     monitor.clear()
     monitor.setCursorPos(1, 1)
 end
@@ -36,42 +36,73 @@ local function center(txt, y)
 
 end
 
--- ==================================================
--- BOUTON
--- ==================================================
+local function button(textValue, x, y, w, h, action)
 
-local buttons = {}
-
-local function addButton(name, x, y, w, h, action)
-
-    table.insert(buttons, {
-        name = name,
+    local b = {
         x = x,
         y = y,
         w = w,
         h = h,
         action = action
-    })
+    }
+
+    table.insert(buttons, b)
+
+    monitor.setBackgroundColor(colors.gray)
+    monitor.setTextColor(colors.white)
 
     for yy = y, y + h - 1 do
-
         monitor.setCursorPos(x, yy)
-
-        monitor.write(
-            string.rep(" ", w)
-        )
-
+        monitor.write(string.rep(" ", w))
     end
 
-    local tx = x + math.floor((w - #name) / 2)
+    local tx = x + math.floor((w - #textValue) / 2)
 
     if tx < x then
         tx = x
     end
 
-    monitor.setCursorPos(tx, y + math.floor(h / 2))
+    local ty = y + math.floor(h / 2)
 
-    monitor.write(name)
+    monitor.setCursorPos(tx, ty)
+    monitor.setTextColor(colors.white)
+    monitor.write(textValue)
+
+    monitor.setBackgroundColor(colors.black)
+
+end
+
+local function backButton()
+
+    button(
+        "< RETOUR",
+        2,
+        height - 2,
+        math.min(16, width - 2),
+        2,
+        home
+    )
+
+end
+
+-- ==================================================
+-- CALCUL DES BOUTONS
+-- ==================================================
+
+local function grid()
+
+    local margin = math.max(1, math.floor(width * 0.05))
+
+    local gap = math.max(1, math.floor(width * 0.04))
+
+    local buttonWidth =
+        math.floor((width - margin * 2 - gap) / 2)
+
+    if buttonWidth < 8 then
+        buttonWidth = 8
+    end
+
+    return margin, gap, buttonWidth
 
 end
 
@@ -79,9 +110,7 @@ end
 -- ACCUEIL
 -- ==================================================
 
-local function home()
-
-    page = "home"
+function home()
 
     buttons = {}
 
@@ -91,61 +120,57 @@ local function home()
 
     center("SERVEUR : ONLINE", 4)
 
-    local w = math.floor((width - 6) / 2)
+    local margin, gap, bw = grid()
 
-    addButton(
+    local bh = math.max(2, math.floor(height * 0.12))
+
+    local y1 = 6
+    local y2 = y1 + bh + 1
+    local y3 = y2 + bh + 1
+
+    button(
         "TACHES",
-        2,
-        7,
-        w,
-        3,
-        function()
-            tasks()
-        end
+        margin,
+        y1,
+        bw,
+        bh,
+        tasks
     )
 
-    addButton(
+    button(
         "EMPLOYES",
-        w + 4,
-        7,
-        w,
-        3,
-        function()
-            employees()
-        end
+        margin + bw + gap,
+        y1,
+        bw,
+        bh,
+        employees
     )
 
-    addButton(
+    button(
         "RAPPORTS",
-        2,
-        12,
-        w,
-        3,
-        function()
-            reports()
-        end
+        margin,
+        y2,
+        bw,
+        bh,
+        reports
     )
 
-    addButton(
+    button(
         "MUSIQUE",
-        w + 4,
-        12,
-        w,
-        3,
-        function()
-            music()
-        end
+        margin + bw + gap,
+        y2,
+        bw,
+        bh,
+        music
     )
 
-    addButton(
+    button(
         "ADMIN",
-        2,
-        17,
-        w,
-        3,
-        function()
-            admin()
-        end
+        margin,
+        y3,
+        bw,
+        bh,
+        admin
     )
 
 end
@@ -156,26 +181,25 @@ end
 
 function tasks()
 
-    page = "tasks"
-
     buttons = {}
 
     clear()
 
     center("TACHES", 2)
 
-    text("MES TACHES", 2, 5)
-
-    text("[ ] Aucune tache", 2, 7)
-
-    addButton(
-        "RETOUR",
+    text(
+        "MES TACHES",
         2,
-        height - 2,
-        12,
-        2,
-        home
+        5
     )
+
+    text(
+        "[ ] Aucune tache",
+        2,
+        7
+    )
+
+    backButton()
 
 end
 
@@ -185,26 +209,25 @@ end
 
 function employees()
 
-    page = "employees"
-
     buttons = {}
 
     clear()
 
     center("EMPLOYES", 2)
 
-    text("EMPLOYES CONNECTES", 2, 5)
-
-    text("Aucun employe", 2, 7)
-
-    addButton(
-        "RETOUR",
+    text(
+        "EMPLOYES CONNECTES",
         2,
-        height - 2,
-        12,
-        2,
-        home
+        5
     )
+
+    text(
+        "Aucun employe",
+        2,
+        7
+    )
+
+    backButton()
 
 end
 
@@ -214,35 +237,36 @@ end
 
 function reports()
 
-    page = "reports"
-
     buttons = {}
 
     clear()
 
     center("RAPPORTS", 2)
 
-    text("Aucun rapport disponible.", 2, 5)
+    text(
+        "RAPPORTS",
+        2,
+        5
+    )
 
-    addButton(
+    text(
+        "Aucun rapport",
+        2,
+        7
+    )
+
+    button(
         "NOUVEAU",
         2,
-        8,
-        15,
+        9,
+        math.min(18, width - 4),
         3,
         function()
-            text("Rapport cree !", 2, 12)
+            text("Rapport cree !", 2, 13)
         end
     )
 
-    addButton(
-        "RETOUR",
-        2,
-        height - 2,
-        12,
-        2,
-        home
-    )
+    backButton()
 
 end
 
@@ -252,46 +276,52 @@ end
 
 function music()
 
-    page = "music"
-
     buttons = {}
 
     clear()
 
     center("MUSIQUE", 2)
 
-    text("Aucune musique.", 2, 5)
+    text(
+        "LECTEUR BOREALIS",
+        2,
+        5
+    )
 
-    addButton(
+    text(
+        "Aucune musique",
+        2,
+        7
+    )
+
+    local bw = math.min(
+        16,
+        math.floor((width - 5) / 2)
+    )
+
+    button(
         "LECTURE",
         2,
-        8,
-        12,
+        9,
+        bw,
         3,
         function()
             text("Lecture...", 2, 13)
         end
     )
 
-    addButton(
+    button(
         "STOP",
-        16,
-        8,
-        12,
+        bw + 4,
+        9,
+        bw,
         3,
         function()
-            text("Arret.", 2, 13)
+            text("Stop", 2, 13)
         end
     )
 
-    addButton(
-        "RETOUR",
-        2,
-        height - 2,
-        12,
-        2,
-        home
-    )
+    backButton()
 
 end
 
@@ -301,44 +331,40 @@ end
 
 function admin()
 
-    page = "admin"
-
     buttons = {}
 
     clear()
 
     center("ADMINISTRATION", 2)
 
-    addButton(
+    local bw = math.min(
+        24,
+        width - 4
+    )
+
+    button(
         "CREER TACHE",
         2,
         6,
-        20,
+        bw,
         3,
         function()
             text("Creation de tache", 2, 11)
         end
     )
 
-    addButton(
+    button(
         "EMPLOYES",
         2,
         11,
-        20,
+        bw,
         3,
         function()
-            text("Gestion des employes", 2, 16)
+            text("Gestion employes", 2, 16)
         end
     )
 
-    addButton(
-        "RETOUR",
-        2,
-        height - 2,
-        12,
-        2,
-        home
-    )
+    backButton()
 
 end
 
@@ -349,7 +375,7 @@ end
 home()
 
 -- ==================================================
--- BOUCLE TACTILE
+-- TACTILE
 -- ==================================================
 
 while true do
