@@ -1,9 +1,20 @@
 local UI = dofile("ui.lua")
 
+local basalt = UI.basalt
+
 local width, height = UI.getSize()
 
+-- ==========================================
+-- BOREALIS OS
+-- ==========================================
+
+
+-- ==========================================
+-- ACCUEIL
+-- ==========================================
+
 local function home()
-    
+
     UI.clear()
 
     UI.header("ACCUEIL")
@@ -88,8 +99,13 @@ local function home()
         buttonHeight,
         settings
     )
+
 end
 
+
+-- ==========================================
+-- TACHES
+-- ==========================================
 
 function tasks()
 
@@ -97,11 +113,11 @@ function tasks()
 
     UI.header("TACHES")
 
-    local label = UI.frame:addLabel()
+    local title = UI.frame:addLabel()
 
-    label:setText("MES TACHES")
-    label:setPosition(2, 3)
-    label:setForeground(colors.white)
+    title:setText("MES TACHES")
+    title:setPosition(2, 3)
+    title:setForeground(colors.white)
 
     local task = UI.frame:addLabel()
 
@@ -114,17 +130,21 @@ function tasks()
 end
 
 
+-- ==========================================
+-- EMPLOYES
+-- ==========================================
+
 function employees()
 
     UI.clear()
 
     UI.header("EMPLOYES")
 
-    local label = UI.frame:addLabel()
+    local title = UI.frame:addLabel()
 
-    label:setText("EMPLOYES CONNECTES")
-    label:setPosition(2, 3)
-    label:setForeground(colors.white)
+    title:setText("EMPLOYES CONNECTES")
+    title:setPosition(2, 3)
+    title:setForeground(colors.white)
 
     local none = UI.frame:addLabel()
 
@@ -137,17 +157,21 @@ function employees()
 end
 
 
+-- ==========================================
+-- RAPPORTS
+-- ==========================================
+
 function reports()
 
     UI.clear()
 
     UI.header("RAPPORTS")
 
-    local label = UI.frame:addLabel()
+    local title = UI.frame:addLabel()
 
-    label:setText("RAPPORTS DE LA BASE")
-    label:setPosition(2, 3)
-    label:setForeground(colors.white)
+    title:setText("RAPPORTS DE LA BASE")
+    title:setPosition(2, 3)
+    title:setForeground(colors.white)
 
     local none = UI.frame:addLabel()
 
@@ -171,17 +195,21 @@ function reports()
 end
 
 
+-- ==========================================
+-- MUSIQUE
+-- ==========================================
+
 function music()
 
     UI.clear()
 
     UI.header("MUSIQUE")
 
-    local label = UI.frame:addLabel()
+    local title = UI.frame:addLabel()
 
-    label:setText("LECTEUR BOREALIS")
-    label:setPosition(2, 3)
-    label:setForeground(colors.white)
+    title:setText("LECTEUR BOREALIS")
+    title:setPosition(2, 3)
+    title:setForeground(colors.white)
 
     local status = UI.frame:addLabel()
 
@@ -196,7 +224,7 @@ function music()
         12,
         3,
         function()
-            print("Lecture")
+            print("Lecture demandee")
         end
     )
 
@@ -216,17 +244,21 @@ function music()
 end
 
 
+-- ==========================================
+-- ADMINISTRATION
+-- ==========================================
+
 function admin()
 
     UI.clear()
 
     UI.header("ADMINISTRATION")
 
-    local label = UI.frame:addLabel()
+    local title = UI.frame:addLabel()
 
-    label:setText("PANNEAU ADMINISTRATEUR")
-    label:setPosition(2, 3)
-    label:setForeground(colors.red)
+    title:setText("PANNEAU ADMINISTRATEUR")
+    title:setPosition(2, 3)
+    title:setForeground(colors.red)
 
     UI.button(
         "CREER UNE TACHE",
@@ -266,17 +298,21 @@ function admin()
 end
 
 
+-- ==========================================
+-- PARAMETRES
+-- ==========================================
+
 function settings()
 
     UI.clear()
 
     UI.header("PARAMETRES")
 
-    local label = UI.frame:addLabel()
+    local title = UI.frame:addLabel()
 
-    label:setText("BOREALIS OS")
-    label:setPosition(2, 3)
-    label:setForeground(colors.white)
+    title:setText("BOREALIS OS")
+    title:setPosition(2, 3)
+    title:setForeground(colors.white)
 
     local version = UI.frame:addLabel()
 
@@ -284,13 +320,21 @@ function settings()
     version:setPosition(2, 5)
     version:setForeground(colors.lime)
 
+    local server = UI.frame:addLabel()
+
+    server:setText("Serveur : Borealis")
+    server:setPosition(2, 7)
+    server:setForeground(colors.lime)
+
     UI.back(home)
 
 end
 
 
-home()
+-- ==========================================
+-- LANCEMENT
+-- ==========================================
 
-basalt = require("basalt")
+home()
 
 basalt.run()

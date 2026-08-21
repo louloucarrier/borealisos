@@ -1,4 +1,4 @@
-local basalt = require("basalt")
+local basalt = dofile("basalt.lua")
 
 local UI = {}
 
@@ -19,6 +19,7 @@ function UI.clear()
 end
 
 function UI.header(title)
+
     local label = UI.frame:addLabel()
 
     label:setText("BOREALIS OS | " .. title)
@@ -64,5 +65,7 @@ function UI.getSize()
     return width, height
 
 end
+
+UI.basalt = basalt
 
 return UI
