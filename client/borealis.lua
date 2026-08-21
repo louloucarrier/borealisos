@@ -46,4 +46,4 @@ local music = frame:addButton()
     :setPosition(20, 12)
     :setSize(15, 3)
 
-basalt.autoUpdate()
+basalt.run()
