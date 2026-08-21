@@ -4,11 +4,10 @@ if not modem then
     error("Aucun modem detecte")
 end
 
-local modemSide = peripheral.getName(modem)
-rednet.open(modemSide)
+rednet.open(peripheral.getName(modem))
 
 local monitor = peripheral.find("monitor")
-local screen = monitor or term.native()
+local screen = monitor or term.current()
 
 local width, height = screen.getSize()
 
@@ -17,15 +16,6 @@ local buttons = {}
 local currentUser = nil
 local currentRole = nil
 local serverID = nil
-
--- Forward declarations
-local home
-local accounts
-local tasks
-local reports
-local createAccount
-local listAccounts
-local chooseRole
 
 -- =========================================================
 -- AFFICHAGE
@@ -38,36 +28,37 @@ local function clear()
     screen.setCursorPos(1, 1)
 end
 
-local function writeText(value, x, y)
+local function center(text, y)
+    text = tostring(text)
+
     if y < 1 or y > height then
         return
     end
+
+    local x = math.floor((width - #text) / 2) + 1
 
     if x < 1 then
         x = 1
     end
 
     screen.setCursorPos(x, y)
-    screen.write(tostring(value))
+    screen.write(text)
 end
 
-local function center(value, y)
-    value = tostring(value)
-
-    local x = math.floor((width - #value) / 2) + 1
-
-    if x < 1 then
-        x = 1
+local function writeAt(text, x, y)
+    if y < 1 or y > height then
+        return
     end
 
-    writeText(value, x, y)
+    screen.setCursorPos(x, y)
+    screen.write(tostring(text))
 end
 
 -- =========================================================
 -- BOUTONS
 -- =========================================================
 
-local function addButton(label, x, y, w, h, action)
+local function drawButton(text, x, y, w, h, action)
     if w < 1 or h < 1 then
         return
     end
@@ -108,7 +99,7 @@ local function addButton(label, x, y, w, h, action)
         screen.write(string.rep(" ", w))
     end
 
-    local tx = x + math.floor((w - #label) / 2)
+    local tx = x + math.floor((w - #text) / 2)
     local ty = y + math.floor(h / 2)
 
     if tx < x then
@@ -116,241 +107,22 @@ local function addButton(label, x, y, w, h, action)
     end
 
     screen.setCursorPos(tx, ty)
-    screen.write(label)
+    screen.write(text)
 
     screen.setBackgroundColor(colors.black)
 end
 
 -- =========================================================
--- ATTENTE TACTILE
+-- ATTENTE BOUTON
 -- =========================================================
 
-local function waitTouch()
+local function waitButton()
+    if not monitor then
+        return nil
+    end
+
     while true do
         local event, side, x, y = os.pullEvent("monitor_touch")
-
-        if monitor and side == peripheral.getName(monitor) then
-            for _, button in ipairs(buttons) do
-                if x >= button.x
-                    and x < button.x + button.w
-                    and y >= button.y
-                    and y < button.y + button.h then
-
-                    return button.action()
-                end
-            end
-        end
-    end
-end
-
--- =========================================================
--- SERVEUR
--- =========================================================
-
-local function findServer()
-    rednet.broadcast({
-        action = "ping"
-    }, "borealis")
-
-    local timer = os.startTimer(3)
-
-    while true do
-        local event, a, b = os.pullEvent()
-
-        if event == "rednet_message" then
-            local sender = a
-            local message = b
-
-            if type(message) == "table"
-                and message.action == "server" then
-
-                serverID = sender
-                os.cancelTimer(timer)
-
-                return true
-            end
-
-        elseif event == "timer" and a == timer then
-            return false
-        end
-    end
-end
-
--- =========================================================
--- CLAVIER TACTILE
--- =========================================================
-
-local keyboardRows = {
-    {"1","2","3","4","5","6","7","8","9","0"},
-    {"Q","W","E","R","T","Y","U","I","O","P"},
-    {"A","S","D","F","G","H","J","K","L"},
-    {"Z","X","C","V","B","N","M"}
-}
-
-local function touchInput(title, password)
-    if not monitor then
-        clear()
-
-        center("BOREALIS OS", 2)
-        center(title, 4)
-
-        writeText("> ", 2, 7)
-        screen.setCursorPos(4, 7)
-
-        if password then
-            return read("*")
-        end
-
-        return read()
-    end
-
-    local value = ""
-
-    while true do
-        buttons = {}
-        clear()
-
-        center("BOREALIS OS", 1)
-        center(title, 3)
-
-        -- Champ de texte
-        screen.setBackgroundColor(colors.gray)
-
-        screen.setCursorPos(2, 5)
-        screen.write(string.rep(" ", math.max(1, width - 2)))
-
-        local displayed = value
-
-        if password then
-            displayed = string.rep("*", #value)
-        end
-
-        local maxLength = math.max(1, width - 3)
-
-        if #displayed > maxLength then
-            displayed = string.sub(
-                displayed,
-                #displayed - maxLength + 1
-            )
-        end
-
-        screen.setCursorPos(2, 5)
-        screen.write(displayed)
-
-        screen.setBackgroundColor(colors.black)
-
-        -- Calcul des touches
-        local startY = 7
-        local rowGap = 1
-        local keyHeight = 2
-
-        for rowNumber, row in ipairs(keyboardRows) do
-            local count = #row
-            local gap = 1
-
-            local keyWidth = math.floor(
-                (width - gap * (count + 1)) / count
-            )
-
-            if keyWidth < 1 then
-                keyWidth = 1
-            end
-
-            local y = startY +
-                (rowNumber - 1) *
-                (keyHeight + rowGap)
-
-            for index, key in ipairs(row) do
-                local x = gap +
-                    (index - 1) *
-                    (keyWidth + gap)
-
-                addButton(
-                    key,
-                    x,
-                    y,
-                    keyWidth,
-                    keyHeight,
-                    function()
-                        value = value .. key
-                    end
-                )
-            end
-        end
-
-        -- Boutons du bas
-        local commandY = height - 3
-
-        if commandY < 1 then
-            commandY = 1
-        end
-
-        local backWidth = math.max(
-            3,
-            math.floor(width * 0.25)
-        )
-
-        local spaceWidth = math.max(
-            4,
-            math.floor(width * 0.35)
-        )
-
-        local okWidth = math.max(
-            3,
-            math.floor(width * 0.25)
-        )
-
-        addButton(
-            "<",
-            1,
-            commandY,
-            backWidth,
-            2,
-            function()
-                if #value > 0 then
-                    value = string.sub(
-                        value,
-                        1,
-                        #value - 1
-                    )
-                end
-            end
-        )
-
-        local spaceX = backWidth + 2
-
-        if spaceX + spaceWidth - 1 <= width then
-            addButton(
-                "ESPACE",
-                spaceX,
-                commandY,
-                spaceWidth,
-                2,
-                function()
-                    value = value .. " "
-                end
-            )
-        end
-
-        local okX = width - okWidth + 1
-
-        if okX < 1 then
-            okX = 1
-        end
-
-        addButton(
-            "OK",
-            okX,
-            commandY,
-            okWidth,
-            2,
-            function()
-                return value
-            end
-        )
-
-        local event, side, x, y =
-            os.pullEvent("monitor_touch")
 
         if side == peripheral.getName(monitor) then
             for _, button in ipairs(buttons) do
@@ -359,13 +131,7 @@ local function touchInput(title, password)
                     and y >= button.y
                     and y < button.y + button.h then
 
-                    local result = button.action()
-
-                    if result ~= nil then
-                        return result
-                    end
-
-                    break
+                    return button.action
                 end
             end
         end
@@ -373,7 +139,73 @@ local function touchInput(title, password)
 end
 
 -- =========================================================
--- CONNEXION
+-- MESSAGE
+-- =========================================================
+
+local function message(title, line)
+    buttons = {}
+    clear()
+
+    center(title, 3)
+
+    if line then
+        center(line, 5)
+    end
+
+    if monitor then
+        drawButton(
+            "OK",
+            math.max(1, math.floor((width - 14) / 2)),
+            height - 3,
+            math.min(14, width),
+            2,
+            "ok"
+        )
+
+        waitButton()
+    else
+        print("")
+        print("Appuyez sur ENTREE...")
+        read()
+    end
+end
+
+-- =========================================================
+-- RECHERCHE SERVEUR
+-- =========================================================
+
+local function findServer()
+    rednet.broadcast(
+        {
+            action = "ping"
+        },
+        "borealis"
+    )
+
+    local timer = os.startTimer(3)
+
+    while true do
+        local event, a, b = os.pullEvent()
+
+        if event == "rednet_message" then
+            local sender = a
+            local msg = b
+
+            if type(msg) == "table"
+                and msg.action == "server" then
+
+                os.cancelTimer(timer)
+                return sender
+            end
+
+        elseif event == "timer" and a == timer then
+            return nil
+        end
+    end
+end
+
+-- =========================================================
+-- LOGIN
 -- =========================================================
 
 local function login()
@@ -386,40 +218,37 @@ local function login()
         if not serverID then
             center("Recherche du serveur...", 7)
 
-            if not findServer() then
-                clear()
+            serverID = findServer()
 
-                center(
+            if not serverID then
+                message(
                     "SERVEUR INTROUVABLE",
-                    4
+                    "Impossible de trouver Borealis"
                 )
-
-                if monitor then
-                    center(
-                        "TOUCHEZ POUR REESSAYER",
-                        8
-                    )
-
-                    os.pullEvent("monitor_touch")
-                else
-                    center(
-                        "APPUYEZ SUR UNE TOUCHE",
-                        8
-                    )
-
-                    os.pullEvent("key")
-                end
             end
         else
-            local username = touchInput(
-                "UTILISATEUR",
-                false
-            )
+            -- Toujours saisir sur le Computer
+            term.setBackgroundColor(colors.black)
+            term.setTextColor(colors.white)
 
-            local password = touchInput(
-                "MOT DE PASSE",
-                true
-            )
+            term.clear()
+            term.setCursorPos(1, 1)
+
+            print("================================")
+            print("        BOREALIS OS")
+            print("          CONNEXION")
+            print("================================")
+            print("")
+            write("Utilisateur : ")
+
+            local username = read()
+
+            write("Mot de passe : ")
+
+            local password = read("*")
+
+            print("")
+            print("Connexion...")
 
             rednet.send(
                 serverID,
@@ -431,50 +260,34 @@ local function login()
                 "borealis"
             )
 
-            local sender, message =
+            local sender, response =
                 rednet.receive(
                     "borealis",
                     5
                 )
 
             if sender == serverID
-                and type(message) == "table"
-                and message.action == "login_result" then
+                and type(response) == "table"
+                and response.action == "login_result" then
 
-                if message.success then
+                if response.success then
                     currentUser = username
-                    currentRole = message.result
+                    currentRole = response.result
 
                     return true
                 end
 
-                clear()
-
-                center(
+                message(
                     "CONNEXION REFUSEE",
-                    4
+                    tostring(response.result)
                 )
-
-                center(
-                    message.result,
-                    6
-                )
-
-                if monitor then
-                    center(
-                        "TOUCHEZ POUR CONTINUER",
-                        9
-                    )
-
-                    os.pullEvent(
-                        "monitor_touch"
-                    )
-                else
-                    os.pullEvent("key")
-                end
-
             else
                 serverID = nil
+
+                message(
+                    "ERREUR",
+                    "Serveur inaccessible"
+                )
             end
         end
     end
@@ -484,75 +297,79 @@ end
 -- TACHES
 -- =========================================================
 
-tasks = function()
+local function showTasks()
     buttons = {}
     clear()
 
-    center("TACHES", 2)
+    center("BOREALIS OS", 2)
+    center("TACHES", 4)
 
     center(
         "Aucune tache pour le moment.",
-        5
+        7
     )
 
-    addButton(
+    drawButton(
         "RETOUR",
-        2,
+        math.max(1, math.floor((width - 18) / 2)),
         height - 3,
-        math.min(20, width - 2),
+        math.min(18, width),
         2,
-        home
+        "home"
     )
 
     if monitor then
-        waitTouch()
-    else
-        os.pullEvent("key")
-        home()
+        return waitButton()
     end
+
+    print("")
+    print("Appuyez sur ENTREE...")
+    read()
+
+    return "home"
 end
 
 -- =========================================================
 -- RAPPORTS
 -- =========================================================
 
-reports = function()
+local function showReports()
     buttons = {}
     clear()
 
-    center("RAPPORTS", 2)
+    center("BOREALIS OS", 2)
+    center("RAPPORTS", 4)
 
     center(
-        "Aucun rapport.",
-        5
+        "Aucun rapport pour le moment.",
+        7
     )
 
-    addButton(
+    drawButton(
         "RETOUR",
-        2,
+        math.max(1, math.floor((width - 18) / 2)),
         height - 3,
-        math.min(20, width - 2),
+        math.min(18, width),
         2,
-        home
+        "home"
     )
 
     if monitor then
-        waitTouch()
-    else
-        os.pullEvent("key")
-        home()
+        return waitButton()
     end
+
+    print("")
+    print("Appuyez sur ENTREE...")
+    read()
+
+    return "home"
 end
 
 -- =========================================================
--- ENVOI CREATION COMPTE
+-- CREATION COMPTE
 -- =========================================================
 
-local function sendCreateAccount(
-    username,
-    password,
-    newRole
-)
+local function sendCreateAccount(username, password, newRole)
     rednet.send(
         serverID,
         {
@@ -565,58 +382,42 @@ local function sendCreateAccount(
         "borealis"
     )
 
-    local sender, message =
+    local sender, response =
         rednet.receive(
             "borealis",
             5
         )
 
-    buttons = {}
-    clear()
-
     if sender == serverID
-        and type(message) == "table" then
+        and type(response) == "table" then
 
-        center(
-            message.result,
-            5
+        message(
+            "CREATION COMPTE",
+            tostring(response.result)
         )
     else
-        center(
-            "SERVEUR INDISPONIBLE",
-            5
+        message(
+            "ERREUR",
+            "Serveur inaccessible"
         )
     end
 
-    if monitor then
-        center(
-            "TOUCHEZ POUR CONTINUER",
-            8
-        )
-
-        os.pullEvent("monitor_touch")
-    else
-        os.pullEvent("key")
-    end
-
-    accounts()
+    return "accounts"
 end
 
 -- =========================================================
 -- CHOIX DU ROLE
 -- =========================================================
 
-chooseRole = function(username, password)
+local function roleMenu(username, password)
     buttons = {}
     clear()
 
-    center(
-        "CHOISIR LE ROLE",
-        2
-    )
+    center("BOREALIS OS", 2)
+    center("CHOISIR LE ROLE", 4)
 
     local buttonWidth = math.min(
-        22,
+        24,
         width - 2
     )
 
@@ -624,144 +425,174 @@ chooseRole = function(username, password)
         (width - buttonWidth) / 2
     ) + 1
 
-    addButton(
+    drawButton(
         "USER",
         x,
-        5,
+        7,
         buttonWidth,
         2,
-        function()
-            sendCreateAccount(
-                username,
-                password,
-                "user"
-            )
-        end
+        "create_user"
     )
 
-    addButton(
+    drawButton(
         "ADMIN",
         x,
-        9,
+        10,
         buttonWidth,
         2,
-        function()
-            sendCreateAccount(
-                username,
-                password,
-                "admin"
-            )
-        end
+        "create_admin"
     )
 
     if currentRole == "root" then
-        addButton(
+        drawButton(
             "ROOT",
             x,
             13,
             buttonWidth,
             2,
-            function()
-                sendCreateAccount(
-                    username,
-                    password,
-                    "root"
-                )
-            end
+            "create_root"
         )
     end
 
-    addButton(
+    drawButton(
         "ANNULER",
         x,
         height - 3,
         buttonWidth,
         2,
-        accounts
+        "accounts"
     )
 
-    waitTouch()
+    local action = waitButton()
+
+    if action == "create_user" then
+        return sendCreateAccount(
+            username,
+            password,
+            "user"
+        )
+    end
+
+    if action == "create_admin" then
+        return sendCreateAccount(
+            username,
+            password,
+            "admin"
+        )
+    end
+
+    if action == "create_root" then
+        return sendCreateAccount(
+            username,
+            password,
+            "root"
+        )
+    end
+
+    return action
 end
 
 -- =========================================================
 -- CREER UN COMPTE
 -- =========================================================
 
-createAccount = function()
-    local username = touchInput(
-        "NOUVEAU NOM",
-        false
-    )
+local function createAccountScreen()
+    -- Saisie sur le Computer
+    term.setBackgroundColor(colors.black)
+    term.setTextColor(colors.white)
 
-    local password = touchInput(
-        "NOUVEAU MOT DE PASSE",
-        true
-    )
+    term.clear()
+    term.setCursorPos(1, 1)
+
+    print("================================")
+    print("       CREATION DE COMPTE")
+    print("================================")
+    print("")
+    write("Nom du compte : ")
+
+    local username = read()
+
+    print("")
+    write("Mot de passe : ")
+
+    local password = read("*")
+
+    if username == "" then
+        message(
+            "ERREUR",
+            "Nom de compte vide"
+        )
+
+        return "accounts"
+    end
+
+    if password == "" then
+        message(
+            "ERREUR",
+            "Mot de passe vide"
+        )
+
+        return "accounts"
+    end
 
     if monitor then
-        chooseRole(
+        return roleMenu(
             username,
             password
         )
-    else
-        clear()
-
-        center(
-            "CHOISIR LE ROLE",
-            2
-        )
-
-        center(
-            "1 = USER",
-            5
-        )
-
-        center(
-            "2 = ADMIN",
-            7
-        )
-
-        if currentRole == "root" then
-            center(
-                "3 = ROOT",
-                9
-            )
-        end
-
-        local event, key =
-            os.pullEvent("key")
-
-        if key == keys.one then
-            sendCreateAccount(
-                username,
-                password,
-                "user"
-            )
-        elseif key == keys.two then
-            sendCreateAccount(
-                username,
-                password,
-                "admin"
-            )
-        elseif key == keys.three
-            and currentRole == "root" then
-
-            sendCreateAccount(
-                username,
-                password,
-                "root"
-            )
-        else
-            accounts()
-        end
     end
+
+    -- Sans moniteur
+    clear()
+
+    print("Choisir le role :")
+    print("")
+    print("1 - USER")
+    print("2 - ADMIN")
+
+    if currentRole == "root" then
+        print("3 - ROOT")
+    end
+
+    print("")
+    write("> ")
+
+    local choice = read()
+
+    if choice == "1" then
+        return sendCreateAccount(
+            username,
+            password,
+            "user"
+        )
+    end
+
+    if choice == "2" then
+        return sendCreateAccount(
+            username,
+            password,
+            "admin"
+        )
+    end
+
+    if choice == "3"
+        and currentRole == "root" then
+
+        return sendCreateAccount(
+            username,
+            password,
+            "root"
+        )
+    end
+
+    return "accounts"
 end
 
 -- =========================================================
--- LISTE DES COMPTES
+-- LISTE COMPTES
 -- =========================================================
 
-listAccounts = function()
+local function showAccounts()
     rednet.send(
         serverID,
         {
@@ -771,7 +602,7 @@ listAccounts = function()
         "borealis"
     )
 
-    local sender, message =
+    local sender, response =
         rednet.receive(
             "borealis",
             5
@@ -780,25 +611,23 @@ listAccounts = function()
     buttons = {}
     clear()
 
-    center(
-        "COMPTES",
-        2
-    )
+    center("BOREALIS OS", 2)
+    center("COMPTES", 4)
 
     if sender == serverID
-        and type(message) == "table"
-        and message.success then
+        and type(response) == "table"
+        and response.success then
 
-        local y = 4
+        local y = 6
 
         for _, account in
-            ipairs(message.accounts) do
+            ipairs(response.accounts) do
 
             if y < height - 4 then
-                writeText(
-                    account.username ..
-                    " : " ..
-                    account.role,
+                writeAt(
+                    tostring(account.username)
+                    .. " : "
+                    .. tostring(account.role),
                     2,
                     y
                 )
@@ -806,45 +635,53 @@ listAccounts = function()
                 y = y + 1
             end
         end
+
+        if y == 6 then
+            center(
+                "Aucun compte",
+                7
+            )
+        end
     else
         center(
             "ACCES REFUSE",
-            5
+            7
         )
     end
 
-    addButton(
+    drawButton(
         "RETOUR",
-        2,
+        math.max(1, math.floor((width - 18) / 2)),
         height - 3,
-        math.min(20, width - 2),
+        math.min(18, width),
         2,
-        accounts
+        "accounts"
     )
 
     if monitor then
-        waitTouch()
-    else
-        os.pullEvent("key")
-        accounts()
+        return waitButton()
     end
+
+    print("")
+    print("Appuyez sur ENTREE...")
+    read()
+
+    return "accounts"
 end
 
 -- =========================================================
--- GESTION DES COMPTES
+-- MENU COMPTES
 -- =========================================================
 
-accounts = function()
+local function accountsScreen()
     buttons = {}
     clear()
 
-    center(
-        "GESTION DES COMPTES",
-        2
-    )
+    center("BOREALIS OS", 2)
+    center("GESTION DES COMPTES", 4)
 
     local buttonWidth = math.min(
-        22,
+        24,
         width - 2
     )
 
@@ -852,46 +689,62 @@ accounts = function()
         (width - buttonWidth) / 2
     ) + 1
 
-    addButton(
+    drawButton(
         "CREER COMPTE",
         x,
-        6,
+        7,
         buttonWidth,
         2,
-        createAccount
+        "create_account"
     )
 
-    addButton(
-        "LISTE COMPTES",
+    drawButton(
+        "LISTE DES COMPTES",
         x,
-        10,
+        11,
         buttonWidth,
         2,
-        listAccounts
+        "list_accounts"
     )
 
-    addButton(
+    drawButton(
         "RETOUR",
         x,
         height - 3,
         buttonWidth,
         2,
-        home
+        "home"
     )
 
     if monitor then
-        waitTouch()
-    else
-        os.pullEvent("key")
-        home()
+        return waitButton()
     end
+
+    print("")
+    print("1 - Creer compte")
+    print("2 - Liste comptes")
+    print("3 - Retour")
+    print("")
+    write("> ")
+
+    local choice = read()
+
+    if choice == "1" then
+        return "create_account"
+    end
+
+    if choice == "2" then
+        return "list_accounts"
+    end
+
+    return "home"
 end
 
 -- =========================================================
 -- ACCUEIL
 -- =========================================================
 
-home = function()
+local function homeScreen()
     buttons = {}
     clear()
 
@@ -901,17 +754,17 @@ home = function()
     )
 
     center(
-        "Bienvenue " .. currentUser,
+        "Bienvenue " .. tostring(currentUser),
         4
     )
 
     center(
-        "Role : " .. currentRole,
+        "Role : " .. tostring(currentRole),
         6
     )
 
     local buttonWidth = math.min(
-        22,
+        24,
         width - 2
     )
 
@@ -919,22 +772,22 @@ home = function()
         (width - buttonWidth) / 2
     ) + 1
 
-    addButton(
+    drawButton(
         "TACHES",
         x,
         8,
         buttonWidth,
         2,
-        tasks
+        "tasks"
     )
 
-    addButton(
+    drawButton(
         "RAPPORTS",
         x,
         11,
         buttonWidth,
         2,
-        reports
+        "reports"
     )
 
     local y = 14
@@ -942,67 +795,109 @@ home = function()
     if currentRole == "admin"
         or currentRole == "root" then
 
-        addButton(
+        drawButton(
             "COMPTES",
             x,
             y,
             buttonWidth,
             2,
-            accounts
+            "accounts"
         )
 
         y = y + 3
     end
 
-    addButton(
+    drawButton(
         "DECONNEXION",
         x,
         y,
         buttonWidth,
         2,
-        function()
-            currentUser = nil
-            currentRole = nil
-            serverID = nil
-            login()
-            home()
-        end
+        "logout"
     )
 
     if monitor then
-        waitTouch()
-    else
-        while true do
-            local event, key =
-                os.pullEvent("key")
-
-            if key == keys.t then
-                tasks()
-                break
-            elseif key == keys.r then
-                reports()
-                break
-            elseif key == keys.a
-                and (
-                    currentRole == "admin"
-                    or currentRole == "root"
-                ) then
-
-                accounts()
-                break
-            elseif key == keys.q then
-                return
-            end
-        end
+        return waitButton()
     end
+
+    print("")
+    print("T - Taches")
+    print("R - Rapports")
+
+    if currentRole == "admin"
+        or currentRole == "root" then
+
+        print("A - Comptes")
+    end
+
+    print("Q - Deconnexion")
+    print("")
+    write("> ")
+
+    local choice = read()
+
+    if choice == "t" then
+        return "tasks"
+    end
+
+    if choice == "r" then
+        return "reports"
+    end
+
+    if choice == "a"
+        and (
+            currentRole == "admin"
+            or currentRole == "root"
+        ) then
+
+        return "accounts"
+    end
+
+    if choice == "q" then
+        return "logout"
+    end
+
+    return "home"
 end
 
 -- =========================================================
--- DEMARRAGE
+-- BOUCLE PRINCIPALE
 -- =========================================================
 
 if login() then
-    home()
-end
+    local page = "home"
 
--- =========================================================
+    while true do
+
+        if page == "home" then
+            page = homeScreen()
+
+        elseif page == "tasks" then
+            page = showTasks()
+
+        elseif page == "reports" then
+            page = showReports()
+
+        elseif page == "accounts" then
+            page = accountsScreen()
+
+        elseif page == "create_account" then
+            page = createAccountScreen()
+
+        elseif page == "list_accounts" then
+            page = showAccounts()
+
+        elseif page == "logout" then
+            currentUser = nil
+            currentRole = nil
+            serverID = nil
+
+            login()
+
+            page = "home"
+
+        else
+            page = "home"
+        end
+    end
+end
