@@ -1,10 +1,14 @@
-local monitor = peripheral.wrap("left")
+local monitor = peripheral.find("monitor")
 
-if not monitor then
-    error("Monitor introuvable sur left")
+local term = term
+
+local usingMonitor = monitor ~= nil
+
+if usingMonitor then
+    term = monitor
 end
 
-local width, height = monitor.getSize()
+local width, height = term.getSize()
 
 local buttons = {}
 
@@ -13,15 +17,15 @@ local buttons = {}
 -- ==================================================
 
 local function clear()
-    monitor.setBackgroundColor(colors.black)
-    monitor.setTextColor(colors.white)
-    monitor.clear()
-    monitor.setCursorPos(1, 1)
+    term.setBackgroundColor(colors.black)
+    term.setTextColor(colors.white)
+    term.clear()
+    term.setCursorPos(1, 1)
 end
 
 local function text(txt, x, y)
-    monitor.setCursorPos(x, y)
-    monitor.write(txt)
+    term.setCursorPos(x, y)
+    term.write(txt)
 end
 
 local function center(txt, y)
@@ -36,9 +40,10 @@ local function center(txt, y)
 
 end
 
-local function button(textValue, x, y, w, h, action)
+local function addButton(name, x, y, w, h, action)
 
     local b = {
+        name = name,
         x = x,
         y = y,
         w = w,
@@ -48,61 +53,59 @@ local function button(textValue, x, y, w, h, action)
 
     table.insert(buttons, b)
 
-    monitor.setBackgroundColor(colors.gray)
-    monitor.setTextColor(colors.white)
+    term.setBackgroundColor(colors.gray)
+    term.setTextColor(colors.white)
 
     for yy = y, y + h - 1 do
-        monitor.setCursorPos(x, yy)
-        monitor.write(string.rep(" ", w))
+
+        term.setCursorPos(x, yy)
+
+        term.write(
+            string.rep(" ", w)
+        )
+
     end
 
-    local tx = x + math.floor((w - #textValue) / 2)
+    local tx =
+        x + math.floor((w - #name) / 2)
 
     if tx < x then
         tx = x
     end
 
-    local ty = y + math.floor(h / 2)
+    local ty =
+        y + math.floor(h / 2)
 
-    monitor.setCursorPos(tx, ty)
-    monitor.setTextColor(colors.white)
-    monitor.write(textValue)
+    term.setCursorPos(tx, ty)
 
-    monitor.setBackgroundColor(colors.black)
+    term.write(name)
+
+    term.setBackgroundColor(colors.black)
 
 end
 
 local function backButton()
 
-    button(
-        "< RETOUR",
-        2,
-        height - 2,
-        math.min(16, width - 2),
-        2,
-        home
-    )
+    if height >= 6 then
 
-end
+        addButton(
+            "RETOUR",
+            2,
+            height - 2,
+            math.min(14, width - 2),
+            2,
+            home
+        )
 
--- ==================================================
--- CALCUL DES BOUTONS
--- ==================================================
+    else
 
-local function grid()
+        text(
+            "R=RETOUR",
+            1,
+            height
+        )
 
-    local margin = math.max(1, math.floor(width * 0.05))
-
-    local gap = math.max(1, math.floor(width * 0.04))
-
-    local buttonWidth =
-        math.floor((width - margin * 2 - gap) / 2)
-
-    if buttonWidth < 8 then
-        buttonWidth = 8
     end
-
-    return margin, gap, buttonWidth
 
 end
 
@@ -116,19 +119,86 @@ function home()
 
     clear()
 
-    center("BOREALIS OS", 2)
+    -- Ecran tres petit
 
-    center("SERVEUR : ONLINE", 4)
+    if width < 20 or height < 8 then
 
-    local margin, gap, bw = grid()
+        center("BOREALIS", 1)
 
-    local bh = math.max(2, math.floor(height * 0.12))
+        text(
+            "T=TACHES",
+            1,
+            3
+        )
+
+        text(
+            "E=EMPLOYES",
+            1,
+            4
+        )
+
+        text(
+            "A=ADMIN",
+            1,
+            5
+        )
+
+        text(
+            "Q=QUITTER",
+            1,
+            6
+        )
+
+        return
+
+    end
+
+    center(
+        "BOREALIS OS",
+        2
+    )
+
+    center(
+        "SERVEUR : ONLINE",
+        4
+    )
+
+    local margin =
+        math.max(
+            1,
+            math.floor(width * 0.05)
+        )
+
+    local gap =
+        math.max(
+            1,
+            math.floor(width * 0.04)
+        )
+
+    local bw =
+        math.floor(
+            (width - margin * 2 - gap) / 2
+        )
+
+    if bw < 8 then
+        bw = 8
+    end
+
+    local bh =
+        math.max(
+            2,
+            math.floor(height * 0.12)
+        )
 
     local y1 = 6
-    local y2 = y1 + bh + 1
-    local y3 = y2 + bh + 1
 
-    button(
+    local y2 =
+        y1 + bh + 1
+
+    local y3 =
+        y2 + bh + 1
+
+    addButton(
         "TACHES",
         margin,
         y1,
@@ -137,7 +207,7 @@ function home()
         tasks
     )
 
-    button(
+    addButton(
         "EMPLOYES",
         margin + bw + gap,
         y1,
@@ -146,7 +216,7 @@ function home()
         employees
     )
 
-    button(
+    addButton(
         "RAPPORTS",
         margin,
         y2,
@@ -155,7 +225,7 @@ function home()
         reports
     )
 
-    button(
+    addButton(
         "MUSIQUE",
         margin + bw + gap,
         y2,
@@ -164,7 +234,7 @@ function home()
         music
     )
 
-    button(
+    addButton(
         "ADMIN",
         margin,
         y3,
@@ -185,7 +255,10 @@ function tasks()
 
     clear()
 
-    center("TACHES", 2)
+    center(
+        "TACHES",
+        2
+    )
 
     text(
         "MES TACHES",
@@ -213,7 +286,10 @@ function employees()
 
     clear()
 
-    center("EMPLOYES", 2)
+    center(
+        "EMPLOYES",
+        2
+    )
 
     text(
         "EMPLOYES CONNECTES",
@@ -241,30 +317,37 @@ function reports()
 
     clear()
 
-    center("RAPPORTS", 2)
-
-    text(
+    center(
         "RAPPORTS",
-        2,
-        5
+        2
     )
 
     text(
         "Aucun rapport",
         2,
-        7
+        5
     )
 
-    button(
-        "NOUVEAU",
-        2,
-        9,
-        math.min(18, width - 4),
-        3,
-        function()
-            text("Rapport cree !", 2, 13)
-        end
-    )
+    if height >= 10 then
+
+        addButton(
+            "NOUVEAU",
+            2,
+            8,
+            math.min(18, width - 4),
+            3,
+            function()
+
+                text(
+                    "Rapport cree !",
+                    2,
+                    height - 4
+                )
+
+            end
+        )
+
+    end
 
     backButton()
 
@@ -280,53 +363,69 @@ function music()
 
     clear()
 
-    center("MUSIQUE", 2)
-
-    text(
-        "LECTEUR BOREALIS",
-        2,
-        5
+    center(
+        "MUSIQUE",
+        2
     )
 
     text(
         "Aucune musique",
         2,
-        7
+        5
     )
 
-    local bw = math.min(
-        16,
-        math.floor((width - 5) / 2)
-    )
+    if height >= 12 then
 
-    button(
-        "LECTURE",
-        2,
-        9,
-        bw,
-        3,
-        function()
-            text("Lecture...", 2, 13)
-        end
-    )
+        local bw =
+            math.min(
+                16,
+                math.floor(
+                    (width - 5) / 2
+                )
+            )
 
-    button(
-        "STOP",
-        bw + 4,
-        9,
-        bw,
-        3,
-        function()
-            text("Stop", 2, 13)
-        end
-    )
+        addButton(
+            "LECTURE",
+            2,
+            8,
+            bw,
+            3,
+            function()
+
+                text(
+                    "Lecture...",
+                    2,
+                    height - 4
+                )
+
+            end
+        )
+
+        addButton(
+            "STOP",
+            bw + 4,
+            8,
+            bw,
+            3,
+            function()
+
+                text(
+                    "Stop",
+                    2,
+                    height - 4
+                )
+
+            end
+        )
+
+    end
 
     backButton()
 
 end
 
 -- ==================================================
--- ADMINISTRATION
+-- ADMIN
 -- ==================================================
 
 function admin()
@@ -335,36 +434,131 @@ function admin()
 
     clear()
 
-    center("ADMINISTRATION", 2)
-
-    local bw = math.min(
-        24,
-        width - 4
+    center(
+        "ADMIN",
+        2
     )
 
-    button(
-        "CREER TACHE",
-        2,
-        6,
-        bw,
-        3,
-        function()
-            text("Creation de tache", 2, 11)
-        end
-    )
+    if height >= 12 then
 
-    button(
-        "EMPLOYES",
-        2,
-        11,
-        bw,
-        3,
-        function()
-            text("Gestion employes", 2, 16)
-        end
-    )
+        addButton(
+            "CREER TACHE",
+            2,
+            6,
+            math.min(22, width - 4),
+            3,
+            function()
+
+                text(
+                    "Creation tache",
+                    2,
+                    height - 4
+                )
+
+            end
+        )
+
+        addButton(
+            "EMPLOYES",
+            2,
+            11,
+            math.min(22, width - 4),
+            3,
+            function()
+
+                text(
+                    "Gestion employes",
+                    2,
+                    height - 4
+                )
+
+            end
+        )
+
+    else
+
+        text(
+            "1=TACHE",
+            1,
+            4
+        )
+
+        text(
+            "2=EMPLOYES",
+            1,
+            5
+        )
+
+    end
 
     backButton()
+
+end
+
+-- ==================================================
+-- INTERFACE PC
+-- ==================================================
+
+local function keyboardLoop()
+
+    while true do
+
+        local event, key =
+            os.pullEvent("key")
+
+        if key == keys.t then
+            tasks()
+
+        elseif key == keys.e then
+            employees()
+
+        elseif key == keys.a then
+            admin()
+
+        elseif key == keys.r then
+            home()
+
+        elseif key == keys.q then
+            return
+
+        end
+
+    end
+
+end
+
+-- ==================================================
+-- INTERFACE MONITOR
+-- ==================================================
+
+local function monitorLoop()
+
+    while true do
+
+        local event, side, x, y =
+            os.pullEvent("monitor_touch")
+
+        if monitor
+        and side == peripheral.getName(monitor) then
+
+            for _, b in ipairs(buttons) do
+
+                if x >= b.x
+                and x < b.x + b.w
+                and y >= b.y
+                and y < b.y + b.h then
+
+                    b.action()
+
+                    break
+
+                end
+
+            end
+
+        end
+
+    end
 
 end
 
@@ -374,32 +568,12 @@ end
 
 home()
 
--- ==================================================
--- TACTILE
--- ==================================================
+if usingMonitor then
 
-while true do
+    monitorLoop()
 
-    local event, side, x, y =
-        os.pullEvent("monitor_touch")
+else
 
-    if side == "left" then
-
-        for _, b in ipairs(buttons) do
-
-            if x >= b.x
-            and x < b.x + b.w
-            and y >= b.y
-            and y < b.y + b.h then
-
-                b.action()
-
-                break
-
-            end
-
-        end
-
-    end
+    keyboardLoop()
 
 end
