@@ -1,4 +1,3 @@
-```lua
 -- =========================================================
 -- BOREALIS OS - CLIENT V4
 -- Clavier tactile + gestion des roles
