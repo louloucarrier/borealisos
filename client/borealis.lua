@@ -1,93 +1,73 @@
 local monitor = peripheral.find("monitor")
 
-local term = term
+local screen
 
-local usingMonitor = monitor ~= nil
-
-if usingMonitor then
-    term = monitor
+if monitor then
+    screen = monitor
+else
+    screen = term.native()
 end
 
-local width, height = term.getSize()
+local width, height = screen.getSize()
 
 local buttons = {}
 
--- ==================================================
--- OUTILS
--- ==================================================
-
 local function clear()
-    term.setBackgroundColor(colors.black)
-    term.setTextColor(colors.white)
-    term.clear()
-    term.setCursorPos(1, 1)
+    screen.setBackgroundColor(colors.black)
+    screen.setTextColor(colors.white)
+    screen.clear()
+    screen.setCursorPos(1, 1)
 end
 
-local function text(txt, x, y)
-    term.setCursorPos(x, y)
-    term.write(txt)
+local function write(text, x, y)
+    screen.setCursorPos(x, y)
+    screen.write(text)
 end
 
-local function center(txt, y)
-
-    local x = math.floor((width - #txt) / 2) + 1
+local function center(text, y)
+    local x = math.floor((width - #text) / 2) + 1
 
     if x < 1 then
         x = 1
     end
 
-    text(txt, x, y)
-
+    write(text, x, y)
 end
 
 local function addButton(name, x, y, w, h, action)
 
-    local b = {
-        name = name,
+    table.insert(buttons, {
         x = x,
         y = y,
         w = w,
         h = h,
         action = action
-    }
+    })
 
-    table.insert(buttons, b)
-
-    term.setBackgroundColor(colors.gray)
-    term.setTextColor(colors.white)
+    screen.setBackgroundColor(colors.gray)
+    screen.setTextColor(colors.white)
 
     for yy = y, y + h - 1 do
-
-        term.setCursorPos(x, yy)
-
-        term.write(
-            string.rep(" ", w)
-        )
-
+        screen.setCursorPos(x, yy)
+        screen.write(string.rep(" ", w))
     end
 
-    local tx =
-        x + math.floor((w - #name) / 2)
+    local tx = x + math.floor((w - #name) / 2)
 
     if tx < x then
         tx = x
     end
 
-    local ty =
-        y + math.floor(h / 2)
+    local ty = y + math.floor(h / 2)
 
-    term.setCursorPos(tx, ty)
+    screen.setCursorPos(tx, ty)
+    screen.write(name)
 
-    term.write(name)
-
-    term.setBackgroundColor(colors.black)
-
+    screen.setBackgroundColor(colors.black)
 end
 
-local function backButton()
-
+local function back()
     if height >= 6 then
-
         addButton(
             "RETOUR",
             2,
@@ -96,112 +76,44 @@ local function backButton()
             2,
             home
         )
-
     else
-
-        text(
-            "R=RETOUR",
-            1,
-            height
-        )
-
+        write("R = RETOUR", 1, height)
     end
-
 end
-
--- ==================================================
--- ACCUEIL
--- ==================================================
 
 function home()
 
     buttons = {}
-
     clear()
-
-    -- Ecran tres petit
 
     if width < 20 or height < 8 then
 
         center("BOREALIS", 1)
 
-        text(
-            "T=TACHES",
-            1,
-            3
-        )
-
-        text(
-            "E=EMPLOYES",
-            1,
-            4
-        )
-
-        text(
-            "A=ADMIN",
-            1,
-            5
-        )
-
-        text(
-            "Q=QUITTER",
-            1,
-            6
-        )
+        write("T = TACHES", 1, 3)
+        write("E = EMPLOYES", 1, 4)
+        write("A = ADMIN", 1, 5)
+        write("Q = QUITTER", 1, 6)
 
         return
-
     end
 
-    center(
-        "BOREALIS OS",
-        2
+    center("BOREALIS OS", 2)
+    center("SERVEUR : ONLINE", 4)
+
+    local gap = 2
+    local margin = 2
+
+    local bw = math.floor(
+        (width - margin * 2 - gap) / 2
     )
 
-    center(
-        "SERVEUR : ONLINE",
-        4
-    )
-
-    local margin =
-        math.max(
-            1,
-            math.floor(width * 0.05)
-        )
-
-    local gap =
-        math.max(
-            1,
-            math.floor(width * 0.04)
-        )
-
-    local bw =
-        math.floor(
-            (width - margin * 2 - gap) / 2
-        )
-
-    if bw < 8 then
-        bw = 8
-    end
-
-    local bh =
-        math.max(
-            2,
-            math.floor(height * 0.12)
-        )
-
-    local y1 = 6
-
-    local y2 =
-        y1 + bh + 1
-
-    local y3 =
-        y2 + bh + 1
+    local bh = 3
 
     addButton(
         "TACHES",
         margin,
-        y1,
+        7,
         bw,
         bh,
         tasks
@@ -210,7 +122,7 @@ function home()
     addButton(
         "EMPLOYES",
         margin + bw + gap,
-        y1,
+        7,
         bw,
         bh,
         employees
@@ -219,7 +131,7 @@ function home()
     addButton(
         "RAPPORTS",
         margin,
-        y2,
+        12,
         bw,
         bh,
         reports
@@ -228,7 +140,7 @@ function home()
     addButton(
         "MUSIQUE",
         margin + bw + gap,
-        y2,
+        12,
         bw,
         bh,
         music
@@ -237,99 +149,49 @@ function home()
     addButton(
         "ADMIN",
         margin,
-        y3,
+        17,
         bw,
         bh,
         admin
     )
-
 end
-
--- ==================================================
--- TACHES
--- ==================================================
 
 function tasks()
 
     buttons = {}
-
     clear()
 
-    center(
-        "TACHES",
-        2
-    )
+    center("TACHES", 2)
 
-    text(
-        "MES TACHES",
-        2,
-        5
-    )
+    write("MES TACHES", 2, 5)
+    write("[ ] Aucune tache", 2, 7)
 
-    text(
-        "[ ] Aucune tache",
-        2,
-        7
-    )
-
-    backButton()
-
+    back()
 end
-
--- ==================================================
--- EMPLOYES
--- ==================================================
 
 function employees()
 
     buttons = {}
-
     clear()
 
-    center(
-        "EMPLOYES",
-        2
-    )
+    center("EMPLOYES", 2)
 
-    text(
-        "EMPLOYES CONNECTES",
-        2,
-        5
-    )
+    write("EMPLOYES CONNECTES", 2, 5)
+    write("Aucun employe", 2, 7)
 
-    text(
-        "Aucun employe",
-        2,
-        7
-    )
-
-    backButton()
-
+    back()
 end
-
--- ==================================================
--- RAPPORTS
--- ==================================================
 
 function reports()
 
     buttons = {}
-
     clear()
 
-    center(
-        "RAPPORTS",
-        2
-    )
+    center("RAPPORTS", 2)
 
-    text(
-        "Aucun rapport",
-        2,
-        5
-    )
+    write("Aucun rapport", 2, 5)
 
     if height >= 10 then
-
         addButton(
             "NOUVEAU",
             2,
@@ -337,107 +199,57 @@ function reports()
             math.min(18, width - 4),
             3,
             function()
-
-                text(
-                    "Rapport cree !",
-                    2,
-                    height - 4
-                )
-
+                write("Rapport cree !", 2, height - 3)
             end
         )
-
     end
 
-    backButton()
-
+    back()
 end
-
--- ==================================================
--- MUSIQUE
--- ==================================================
 
 function music()
 
     buttons = {}
-
     clear()
 
-    center(
-        "MUSIQUE",
-        2
-    )
+    center("MUSIQUE", 2)
 
-    text(
-        "Aucune musique",
-        2,
-        5
-    )
+    write("Aucune musique", 2, 5)
 
     if height >= 12 then
-
-        local bw =
-            math.min(
-                16,
-                math.floor(
-                    (width - 5) / 2
-                )
-            )
 
         addButton(
             "LECTURE",
             2,
             8,
-            bw,
+            12,
             3,
             function()
-
-                text(
-                    "Lecture...",
-                    2,
-                    height - 4
-                )
-
+                write("Lecture...", 2, height - 3)
             end
         )
 
         addButton(
             "STOP",
-            bw + 4,
+            16,
             8,
-            bw,
+            12,
             3,
             function()
-
-                text(
-                    "Stop",
-                    2,
-                    height - 4
-                )
-
+                write("Stop", 2, height - 3)
             end
         )
-
     end
 
-    backButton()
-
+    back()
 end
-
--- ==================================================
--- ADMIN
--- ==================================================
 
 function admin()
 
     buttons = {}
-
     clear()
 
-    center(
-        "ADMIN",
-        2
-    )
+    center("ADMINISTRATION", 2)
 
     if height >= 12 then
 
@@ -448,13 +260,7 @@ function admin()
             math.min(22, width - 4),
             3,
             function()
-
-                text(
-                    "Creation tache",
-                    2,
-                    height - 4
-                )
-
+                write("Creation tache", 2, height - 3)
             end
         )
 
@@ -465,41 +271,42 @@ function admin()
             math.min(22, width - 4),
             3,
             function()
-
-                text(
-                    "Gestion employes",
-                    2,
-                    height - 4
-                )
-
+                write("Gestion employes", 2, height - 3)
             end
         )
-
     else
 
-        text(
-            "1=TACHE",
-            1,
-            4
-        )
-
-        text(
-            "2=EMPLOYES",
-            1,
-            5
-        )
-
+        write("1 = TACHE", 1, 4)
+        write("2 = EMPLOYES", 1, 5)
     end
 
-    backButton()
-
+    back()
 end
 
--- ==================================================
--- INTERFACE PC
--- ==================================================
+home()
 
-local function keyboardLoop()
+if monitor then
+
+    while true do
+
+        local event, side, x, y =
+            os.pullEvent("monitor_touch")
+
+        for _, b in ipairs(buttons) do
+
+            if x >= b.x
+            and x < b.x + b.w
+            and y >= b.y
+            and y < b.y + b.h then
+
+                b.action()
+                break
+            end
+
+        end
+    end
+
+else
 
     while true do
 
@@ -519,61 +326,7 @@ local function keyboardLoop()
             home()
 
         elseif key == keys.q then
-            return
-
+            break
         end
-
     end
-
-end
-
--- ==================================================
--- INTERFACE MONITOR
--- ==================================================
-
-local function monitorLoop()
-
-    while true do
-
-        local event, side, x, y =
-            os.pullEvent("monitor_touch")
-
-        if monitor
-        and side == peripheral.getName(monitor) then
-
-            for _, b in ipairs(buttons) do
-
-                if x >= b.x
-                and x < b.x + b.w
-                and y >= b.y
-                and y < b.y + b.h then
-
-                    b.action()
-
-                    break
-
-                end
-
-            end
-
-        end
-
-    end
-
-end
-
--- ==================================================
--- DEMARRAGE
--- ==================================================
-
-home()
-
-if usingMonitor then
-
-    monitorLoop()
-
-else
-
-    keyboardLoop()
-
 end
