@@ -1,4 +1,3 @@
-```lua
 local modem = peripheral.find("modem")
 
 if not modem then
@@ -389,4 +388,3 @@ while true do
         end
     end
 end
-```
