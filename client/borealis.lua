@@ -1,147 +1,296 @@
-local basalt = require("basalt")
+local UI = dofile("ui.lua")
 
--- ==========================================
--- BOREALIS OS V1
--- ==========================================
+local width, height = UI.getSize()
 
-local monitor = peripheral.find("monitor")
+local function home()
+    
+    UI.clear()
 
-if not monitor then
-    error("Aucun Monitor détecté !")
+    UI.header("ACCUEIL")
+
+    local status = UI.frame:addLabel()
+
+    status:setText("SERVEUR : ONLINE")
+    status:setPosition(2, 3)
+    status:setForeground(colors.lime)
+
+    local info = UI.frame:addLabel()
+
+    info:setText("Centre de controle Borealis")
+    info:setPosition(2, 5)
+    info:setForeground(colors.white)
+
+    local margin = 2
+    local gap = 2
+
+    local buttonWidth =
+        math.floor((width - margin * 2 - gap) / 2)
+
+    local buttonHeight = 3
+
+    local x1 = margin
+    local x2 = margin + buttonWidth + gap
+
+    local y1 = 7
+    local y2 = y1 + buttonHeight + 1
+    local y3 = y2 + buttonHeight + 1
+
+    UI.button(
+        "TACHES",
+        x1,
+        y1,
+        buttonWidth,
+        buttonHeight,
+        tasks
+    )
+
+    UI.button(
+        "EMPLOYES",
+        x2,
+        y1,
+        buttonWidth,
+        buttonHeight,
+        employees
+    )
+
+    UI.button(
+        "RAPPORTS",
+        x1,
+        y2,
+        buttonWidth,
+        buttonHeight,
+        reports
+    )
+
+    UI.button(
+        "MUSIQUE",
+        x2,
+        y2,
+        buttonWidth,
+        buttonHeight,
+        music
+    )
+
+    UI.button(
+        "ADMINISTRATION",
+        x1,
+        y3,
+        buttonWidth,
+        buttonHeight,
+        admin
+    )
+
+    UI.button(
+        "PARAMETRES",
+        x2,
+        y3,
+        buttonWidth,
+        buttonHeight,
+        settings
+    )
 end
 
--- Cadre principal
-local frame = basalt.createFrame()
-frame:setTerm(monitor)
-frame:setBackground(colors.black)
 
--- Taille réelle du monitor
-local width, height = monitor.getSize()
+function tasks()
 
--- ==========================================
--- TITRE
--- ==========================================
+    UI.clear()
 
-local title = frame:addLabel()
-title:setText("BOREALIS OS")
-title:setPosition(2, 2)
-title:setForeground(colors.cyan)
+    UI.header("TACHES")
 
-local status = frame:addLabel()
-status:setText("● SERVEUR ONLINE")
-status:setPosition(2, 3)
-status:setForeground(colors.lime)
+    local label = UI.frame:addLabel()
 
--- ==========================================
--- DIMENSIONS DES BOUTONS
--- ==========================================
+    label:setText("MES TACHES")
+    label:setPosition(2, 3)
+    label:setForeground(colors.white)
 
-local margin = 2
-local gap = 2
+    local task = UI.frame:addLabel()
 
-local buttonWidth = math.floor((width - margin * 2 - gap) / 2)
-local buttonHeight = 3
+    task:setText("[ ] Aucune tache")
+    task:setPosition(2, 5)
+    task:setForeground(colors.orange)
 
-local x1 = margin
-local x2 = margin + buttonWidth + gap
+    UI.back(home)
 
-local y1 = 6
-local y2 = y1 + buttonHeight + 1
-local y3 = y2 + buttonHeight + 1
-
--- ==========================================
--- FONCTION BOUTON
--- ==========================================
-
-local function createButton(text, x, y, color)
-
-    local button = frame:addButton()
-
-    button:setText(text)
-    button:setPosition(x, y)
-    button:setSize(buttonWidth, buttonHeight)
-    button:setBackground(color)
-    button:setForeground(colors.white)
-
-    return button
 end
 
--- ==========================================
--- APPLICATIONS
--- ==========================================
 
-local tasks = createButton(
-    "TACHES",
-    x1,
-    y1,
-    colors.blue
-)
+function employees()
 
-local employees = createButton(
-    "EMPLOYES",
-    x2,
-    y1,
-    colors.green
-)
+    UI.clear()
 
-local reports = createButton(
-    "RAPPORTS",
-    x1,
-    y2,
-    colors.orange
-)
+    UI.header("EMPLOYES")
 
-local music = createButton(
-    "MUSIQUE",
-    x2,
-    y2,
-    colors.purple
-)
+    local label = UI.frame:addLabel()
 
-local admin = createButton(
-    "ADMINISTRATION",
-    x1,
-    y3,
-    colors.red
-)
+    label:setText("EMPLOYES CONNECTES")
+    label:setPosition(2, 3)
+    label:setForeground(colors.white)
 
-local settings = createButton(
-    "PARAMETRES",
-    x2,
-    y3,
-    colors.gray
-)
+    local none = UI.frame:addLabel()
 
--- ==========================================
--- EVENEMENTS
--- ==========================================
+    none:setText("Aucun employe")
+    none:setPosition(2, 5)
+    none:setForeground(colors.orange)
 
-tasks:onClick(function()
-    print("Ouverture des tâches")
-end)
+    UI.back(home)
 
-employees:onClick(function()
-    print("Ouverture des employés")
-end)
+end
 
-reports:onClick(function()
-    print("Ouverture des rapports")
-end)
 
-music:onClick(function()
-    print("Ouverture de la musique")
-end)
+function reports()
 
-admin:onClick(function()
-    print("Ouverture de l'administration")
-end)
+    UI.clear()
 
-settings:onClick(function()
-    print("Ouverture des paramètres")
-end)
+    UI.header("RAPPORTS")
 
--- ==========================================
--- BOUCLE BASALT
--- ==========================================
+    local label = UI.frame:addLabel()
+
+    label:setText("RAPPORTS DE LA BASE")
+    label:setPosition(2, 3)
+    label:setForeground(colors.white)
+
+    local none = UI.frame:addLabel()
+
+    none:setText("Aucun rapport")
+    none:setPosition(2, 5)
+    none:setForeground(colors.orange)
+
+    UI.button(
+        "NOUVEAU RAPPORT",
+        2,
+        7,
+        math.min(25, width - 4),
+        3,
+        function()
+            print("Nouveau rapport")
+        end
+    )
+
+    UI.back(home)
+
+end
+
+
+function music()
+
+    UI.clear()
+
+    UI.header("MUSIQUE")
+
+    local label = UI.frame:addLabel()
+
+    label:setText("LECTEUR BOREALIS")
+    label:setPosition(2, 3)
+    label:setForeground(colors.white)
+
+    local status = UI.frame:addLabel()
+
+    status:setText("Aucune musique")
+    status:setPosition(2, 5)
+    status:setForeground(colors.orange)
+
+    UI.button(
+        "LECTURE",
+        2,
+        7,
+        12,
+        3,
+        function()
+            print("Lecture")
+        end
+    )
+
+    UI.button(
+        "STOP",
+        16,
+        7,
+        12,
+        3,
+        function()
+            print("Stop")
+        end
+    )
+
+    UI.back(home)
+
+end
+
+
+function admin()
+
+    UI.clear()
+
+    UI.header("ADMINISTRATION")
+
+    local label = UI.frame:addLabel()
+
+    label:setText("PANNEAU ADMINISTRATEUR")
+    label:setPosition(2, 3)
+    label:setForeground(colors.red)
+
+    UI.button(
+        "CREER UNE TACHE",
+        2,
+        5,
+        math.min(25, width - 4),
+        3,
+        function()
+            print("Creation de tache")
+        end
+    )
+
+    UI.button(
+        "GERER EMPLOYES",
+        2,
+        9,
+        math.min(25, width - 4),
+        3,
+        function()
+            print("Gestion employes")
+        end
+    )
+
+    UI.button(
+        "JOURNAL",
+        2,
+        13,
+        math.min(25, width - 4),
+        3,
+        function()
+            print("Journal")
+        end
+    )
+
+    UI.back(home)
+
+end
+
+
+function settings()
+
+    UI.clear()
+
+    UI.header("PARAMETRES")
+
+    local label = UI.frame:addLabel()
+
+    label:setText("BOREALIS OS")
+    label:setPosition(2, 3)
+    label:setForeground(colors.white)
+
+    local version = UI.frame:addLabel()
+
+    version:setText("Version 0.2")
+    version:setPosition(2, 5)
+    version:setForeground(colors.lime)
+
+    UI.back(home)
+
+end
+
+
+home()
+
+basalt = require("basalt")
 
 basalt.run()
