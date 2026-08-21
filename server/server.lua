@@ -1,3 +1,4 @@
+```lua
 local modem = peripheral.find("modem")
 
 if not modem then
@@ -12,29 +13,37 @@ local DATABASE = "accounts.db"
 
 local accounts = {}
 
-local function saveAccounts()
+-- =========================================================
+-- SAUVEGARDE
+-- =========================================================
 
+local function saveAccounts()
     local file = fs.open(DATABASE, "w")
+
+    if not file then
+        error("Impossible d'ouvrir accounts.db")
+    end
 
     file.write(
         textutils.serialize(accounts)
     )
 
     file.close()
-
 end
+
+-- =========================================================
+-- CHARGEMENT
+-- =========================================================
 
 local function loadAccounts()
 
     if not fs.exists(DATABASE) then
 
         accounts = {
-
             root = {
                 password = "1234",
                 role = "root"
             }
-
         }
 
         saveAccounts()
@@ -57,23 +66,46 @@ local function loadAccounts()
 
     local file = fs.open(DATABASE, "r")
 
+    if not file then
+        error("Impossible de lire accounts.db")
+    end
+
     local data = file.readAll()
 
     file.close()
 
-    accounts =
-        textutils.unserialize(data)
+    accounts = textutils.unserialize(data)
 
     if not accounts then
         error("accounts.db est corrompu")
     end
 
+    -- Protection : s'assurer que root existe
+    if not accounts.root then
+        accounts.root = {
+            password = "1234",
+            role = "root"
+        }
+
+        saveAccounts()
+
+        print("Compte root recree.")
+    end
 end
+
+-- =========================================================
+-- CONNEXION
+-- =========================================================
 
 local function login(username, password)
 
-    local account =
-        accounts[username]
+    if type(username) ~= "string"
+    or type(password) ~= "string" then
+
+        return false, "Donnees invalides"
+    end
+
+    local account = accounts[username]
 
     if not account then
         return false, "Compte inexistant"
@@ -84,8 +116,11 @@ local function login(username, password)
     end
 
     return true, account.role
-
 end
+
+-- =========================================================
+-- CREATION DE COMPTE
+-- =========================================================
 
 local function createAccount(
     username,
@@ -93,18 +128,16 @@ local function createAccount(
     role
 )
 
-    if username == nil
+    if type(username) ~= "string"
     or username == "" then
 
         return false, "Nom invalide"
-
     end
 
-    if password == nil
+    if type(password) ~= "string"
     or password == "" then
 
         return false, "Mot de passe invalide"
-
     end
 
     if accounts[username] then
@@ -116,23 +149,27 @@ local function createAccount(
     and role ~= "root" then
 
         return false, "Role invalide"
-
     end
 
     accounts[username] = {
-
         password = password,
         role = role
-
     }
 
     saveAccounts()
 
     return true, "Compte cree"
-
 end
 
+-- =========================================================
+-- CHARGEMENT DATABASE
+-- =========================================================
+
 loadAccounts()
+
+-- =========================================================
+-- DEMARRAGE SERVEUR
+-- =========================================================
 
 print("==============================")
 print("      BOREALIS SERVER")
@@ -143,6 +180,15 @@ print("ID : " .. os.getComputerID())
 print("")
 print("Serveur pret")
 print("")
+print("Permissions :")
+print("USER  -> aucune creation")
+print("ADMIN -> USER + ADMIN")
+print("ROOT  -> USER + ADMIN + ROOT")
+print("")
+
+-- =========================================================
+-- BOUCLE SERVEUR
+-- =========================================================
 
 while true do
 
@@ -153,6 +199,10 @@ while true do
 
     if type(message) == "table" then
 
+        -- =================================================
+        -- PING
+        -- =================================================
+
         if message.action == "ping" then
 
             rednet.send(
@@ -162,6 +212,10 @@ while true do
                 },
                 "borealis"
             )
+
+        -- =================================================
+        -- LOGIN
+        -- =================================================
 
         elseif message.action == "login" then
 
@@ -182,6 +236,10 @@ while true do
                 "borealis"
             )
 
+        -- =================================================
+        -- CREATION COMPTE
+        -- =================================================
+
         elseif message.action ==
             "create_account" then
 
@@ -190,6 +248,7 @@ while true do
                     message.requester
                 ]
 
+            -- Demandeur inconnu
             if not requester then
 
                 rednet.send(
@@ -197,14 +256,13 @@ while true do
                     {
                         action = "create_result",
                         success = false,
-                        result =
-                            "Demandeur inconnu"
+                        result = "Demandeur inconnu"
                     },
                     "borealis"
                 )
 
-            elseif requester.role ~= "root"
-            and requester.role ~= "admin" then
+            -- USER interdit
+            elseif requester.role == "user" then
 
                 rednet.send(
                     sender,
@@ -216,6 +274,22 @@ while true do
                     "borealis"
                 )
 
+            -- Role demande invalide
+            elseif message.role ~= "user"
+            and message.role ~= "admin"
+            and message.role ~= "root" then
+
+                rednet.send(
+                    sender,
+                    {
+                        action = "create_result",
+                        success = false,
+                        result = "Role invalide"
+                    },
+                    "borealis"
+                )
+
+            -- ADMIN ne peut pas creer ROOT
             elseif message.role == "root"
             and requester.role ~= "root" then
 
@@ -230,6 +304,7 @@ while true do
                     "borealis"
                 )
 
+            -- ADMIN ou ROOT autorise
             else
 
                 local success,
@@ -249,8 +324,11 @@ while true do
                     },
                     "borealis"
                 )
-
             end
+
+        -- =================================================
+        -- LISTE DES COMPTES
+        -- =================================================
 
         elseif message.action ==
             "list_accounts" then
@@ -278,7 +356,6 @@ while true do
                             role = account.role
                         }
                     )
-
                 end
 
                 rednet.send(
@@ -308,11 +385,8 @@ while true do
                     },
                     "borealis"
                 )
-
             end
-
         end
-
     end
-
 end
+```
