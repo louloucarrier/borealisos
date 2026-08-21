@@ -1,18 +1,16 @@
--- =========================================================
--- BOREALIS OS - CLIENT
--- =========================================================
-
 local modem = peripheral.find("modem")
 
 if not modem then
-    error("Aucun modem detecte !")
+    error("Aucun modem detecte")
 end
 
-local modemSide = peripheral.getName(modem)
+local modemSide =
+    peripheral.getName(modem)
 
 rednet.open(modemSide)
 
-local monitor = peripheral.find("monitor")
+local monitor =
+    peripheral.find("monitor")
 
 local screen
 
@@ -22,7 +20,8 @@ else
     screen = term.native()
 end
 
-local width, height = screen.getSize()
+local width, height =
+    screen.getSize()
 
 local buttons = {}
 
@@ -31,9 +30,9 @@ local currentRole = nil
 
 local SERVER_ID = nil
 
--- =========================================================
--- RECHERCHE DU SERVEUR
--- =========================================================
+--------------------------------------------------
+-- SERVEUR
+--------------------------------------------------
 
 local function findServer()
 
@@ -44,27 +43,31 @@ local function findServer()
         "borealis"
     )
 
-    local timer = os.startTimer(3)
+    local timer =
+        os.startTimer(3)
 
     while true do
 
-        local event, p1, p2, p3 =
+        local event,
+              p1,
+              p2 =
             os.pullEvent()
 
-        if event == "rednet_message" then
+        if event ==
+            "rednet_message" then
 
             local sender = p1
             local message = p2
 
             if type(message) == "table"
-            and message.action == "server" then
+            and message.action ==
+                "server" then
 
                 SERVER_ID = sender
 
                 os.cancelTimer(timer)
 
                 return true
-
             end
 
         elseif event == "timer"
@@ -78,14 +81,19 @@ local function findServer()
 
 end
 
--- =========================================================
+--------------------------------------------------
 -- AFFICHAGE
--- =========================================================
+--------------------------------------------------
 
 local function clear()
 
-    screen.setBackgroundColor(colors.black)
-    screen.setTextColor(colors.white)
+    screen.setBackgroundColor(
+        colors.black
+    )
+
+    screen.setTextColor(
+        colors.white
+    )
 
     screen.clear()
 
@@ -96,6 +104,7 @@ end
 local function write(text, x, y)
 
     screen.setCursorPos(x, y)
+
     screen.write(text)
 
 end
@@ -103,7 +112,9 @@ end
 local function center(text, y)
 
     local x =
-        math.floor((width - #text) / 2) + 1
+        math.floor(
+            (width - #text) / 2
+        ) + 1
 
     if x < 1 then
         x = 1
@@ -112,6 +123,10 @@ local function center(text, y)
     write(text, x, y)
 
 end
+
+--------------------------------------------------
+-- BOUTONS
+--------------------------------------------------
 
 local function addButton(
     name,
@@ -133,13 +148,16 @@ local function addButton(
         }
     )
 
-    screen.setBackgroundColor(colors.gray)
-
-    screen.setTextColor(colors.white)
+    screen.setBackgroundColor(
+        colors.gray
+    )
 
     for yy = y, y + h - 1 do
 
-        screen.setCursorPos(x, yy)
+        screen.setCursorPos(
+            x,
+            yy
+        )
 
         screen.write(
             string.rep(" ", w)
@@ -148,28 +166,36 @@ local function addButton(
     end
 
     local tx =
-        x + math.floor((w - #name) / 2)
+        x +
+        math.floor(
+            (w - #name) / 2
+        )
 
     if tx < x then
         tx = x
     end
 
-    local ty =
+    screen.setCursorPos(
+        tx,
         y + math.floor(h / 2)
-
-    screen.setCursorPos(tx, ty)
+    )
 
     screen.write(name)
 
-    screen.setBackgroundColor(colors.black)
+    screen.setBackgroundColor(
+        colors.black
+    )
 
 end
 
--- =========================================================
+--------------------------------------------------
 -- SAISIE
--- =========================================================
+--------------------------------------------------
 
-local function input(prompt, password)
+local function input(
+    prompt,
+    password
+)
 
     clear()
 
@@ -189,21 +215,21 @@ local function input(prompt, password)
         7
     )
 
-    screen.setTextColor(colors.white)
+    if password then
 
-    local value =
-        read(
-            password and "*"
-            or nil
-        )
+        return read("*")
 
-    return value
+    else
+
+        return read()
+
+    end
 
 end
 
--- =========================================================
+--------------------------------------------------
 -- LOGIN
--- =========================================================
+--------------------------------------------------
 
 local function login()
 
@@ -224,7 +250,7 @@ local function login()
         if not SERVER_ID then
 
             write(
-                "Recherche du serveur...",
+                "Recherche serveur...",
                 2,
                 7
             )
@@ -234,24 +260,22 @@ local function login()
                 clear()
 
                 center(
-                    "ERREUR",
+                    "SERVEUR INTROUVABLE",
                     3
                 )
 
                 center(
-                    "Serveur introuvable",
-                    5
-                )
-
-                center(
                     "R = REESSAYER",
-                    7
+                    6
                 )
 
                 while true do
 
-                    local event, key =
-                        os.pullEvent("key")
+                    local event,
+                          key =
+                        os.pullEvent(
+                            "key"
+                        )
 
                     if key == keys.r then
                         break
@@ -280,12 +304,13 @@ local function login()
                 {
                     action = "login",
                     username = username,
-                    password = textutils.sha256(password)
+                    password = password
                 },
                 "borealis"
             )
 
-            local sender, message =
+            local sender,
+                  message =
                 rednet.receive(
                     "borealis",
                     5
@@ -293,8 +318,8 @@ local function login()
 
             if sender == SERVER_ID
             and message
-            and message.action == "login_result"
-            then
+            and message.action ==
+                "login_result" then
 
                 if message.success then
 
@@ -341,9 +366,9 @@ local function login()
 
 end
 
--- =========================================================
--- MENU PRINCIPAL
--- =========================================================
+--------------------------------------------------
+-- ACCUEIL
+--------------------------------------------------
 
 local function home()
 
@@ -357,12 +382,14 @@ local function home()
     )
 
     center(
-        "Bienvenue " .. currentUser,
+        "Bienvenue " ..
+        currentUser,
         4
     )
 
     write(
-        "Role : " .. currentRole,
+        "Role : " ..
+        currentRole,
         2,
         6
     )
@@ -373,13 +400,12 @@ local function home()
         "TACHES",
         2,
         y,
-        math.min(20, width - 4),
+        math.min(
+            20,
+            width - 4
+        ),
         3,
-        function()
-
-            tasks()
-
-        end
+        tasks
     )
 
     y = y + 5
@@ -388,13 +414,12 @@ local function home()
         "RAPPORTS",
         2,
         y,
-        math.min(20, width - 4),
+        math.min(
+            20,
+            width - 4
+        ),
         3,
-        function()
-
-            reports()
-
-        end
+        reports
     )
 
     y = y + 5
@@ -406,13 +431,12 @@ local function home()
             "COMPTES",
             2,
             y,
-            math.min(20, width - 4),
+            math.min(
+                20,
+                width - 4
+            ),
             3,
-            function()
-
-                accounts()
-
-            end
+            accounts
         )
 
         y = y + 5
@@ -423,12 +447,16 @@ local function home()
         "DECONNEXION",
         2,
         y,
-        math.min(20, width - 4),
+        math.min(
+            20,
+            width - 4
+        ),
         3,
         function()
 
             currentUser = nil
             currentRole = nil
+            SERVER_ID = nil
 
             login()
 
@@ -439,9 +467,9 @@ local function home()
 
 end
 
--- =========================================================
+--------------------------------------------------
 -- TACHES
--- =========================================================
+--------------------------------------------------
 
 function tasks()
 
@@ -455,7 +483,7 @@ function tasks()
     )
 
     write(
-        "Aucune tache pour le moment.",
+        "Aucune tache.",
         2,
         5
     )
@@ -471,9 +499,9 @@ function tasks()
 
 end
 
--- =========================================================
+--------------------------------------------------
 -- RAPPORTS
--- =========================================================
+--------------------------------------------------
 
 function reports()
 
@@ -503,9 +531,9 @@ function reports()
 
 end
 
--- =========================================================
+--------------------------------------------------
 -- COMPTES
--- =========================================================
+--------------------------------------------------
 
 function accounts()
 
@@ -514,40 +542,32 @@ function accounts()
     clear()
 
     center(
-        "GESTION DES COMPTES",
+        "COMPTES",
         2
-    )
-
-    write(
-        "Creation de comptes :",
-        2,
-        5
     )
 
     addButton(
         "CREER COMPTE",
         2,
-        7,
-        math.min(20, width - 4),
+        6,
+        math.min(
+            20,
+            width - 4
+        ),
         3,
-        function()
-
-            createAccount()
-
-        end
+        createAccount
     )
 
     addButton(
         "LISTE COMPTES",
         2,
-        12,
-        math.min(20, width - 4),
+        11,
+        math.min(
+            20,
+            width - 4
+        ),
         3,
-        function()
-
-            listAccounts()
-
-        end
+        listAccounts
     )
 
     addButton(
@@ -561,9 +581,9 @@ function accounts()
 
 end
 
--- =========================================================
--- CREATION COMPTE
--- =========================================================
+--------------------------------------------------
+-- CREATION
+--------------------------------------------------
 
 function createAccount()
 
@@ -575,25 +595,25 @@ function createAccount()
 
     local password =
         input(
-            "Nouveau mot de passe :",
+            "Mot de passe :",
             true
         )
 
     clear()
 
     center(
-        "ROLE",
-        3
+        "CHOISIR LE ROLE",
+        2
     )
 
     write(
-        "1 = user",
+        "1 = USER",
         2,
         5
     )
 
     write(
-        "2 = admin",
+        "2 = ADMIN",
         2,
         6
     )
@@ -601,14 +621,15 @@ function createAccount()
     if currentRole == "root" then
 
         write(
-            "3 = root",
+            "3 = ROOT",
             2,
             7
         )
 
     end
 
-    local _, key =
+    local event,
+          key =
         os.pullEvent("key")
 
     local role
@@ -637,7 +658,8 @@ function createAccount()
     rednet.send(
         SERVER_ID,
         {
-            action = "create_account",
+            action =
+                "create_account",
 
             requester =
                 currentUser,
@@ -654,7 +676,8 @@ function createAccount()
         "borealis"
     )
 
-    local sender, message =
+    local sender,
+          message =
         rednet.receive(
             "borealis",
             5
@@ -690,22 +713,26 @@ function createAccount()
 
 end
 
--- =========================================================
--- LISTE COMPTES
--- =========================================================
+--------------------------------------------------
+-- LISTE
+--------------------------------------------------
 
 function listAccounts()
 
     rednet.send(
         SERVER_ID,
         {
-            action = "list_accounts",
-            requester = currentUser
+            action =
+                "list_accounts",
+
+            requester =
+                currentUser
         },
         "borealis"
     )
 
-    local sender, message =
+    local sender,
+          message =
         rednet.receive(
             "borealis",
             5
@@ -724,14 +751,13 @@ function listAccounts()
 
         local y = 4
 
-        for _, account in ipairs(
-            message.accounts
-        ) do
+        for _, account in
+            ipairs(message.accounts) do
 
             write(
-                account.username
-                .. " : "
-                .. account.role,
+                account.username ..
+                " : " ..
+                account.role,
                 2,
                 y
             )
@@ -765,30 +791,34 @@ function listAccounts()
 
 end
 
--- =========================================================
--- BOUCLE TACTILE
--- =========================================================
+--------------------------------------------------
+-- TACTILE
+--------------------------------------------------
 
 local function monitorLoop()
 
     while true do
 
-        local event, side, x, y =
+        local event,
+              side,
+              x,
+              y =
             os.pullEvent(
                 "monitor_touch"
             )
 
         if monitor
-        and side == peripheral.getName(monitor)
+        and side ==
+            peripheral.getName(monitor)
         then
 
-            for _, b in ipairs(buttons) do
+            for _, b in
+                ipairs(buttons) do
 
                 if x >= b.x
                 and x < b.x + b.w
                 and y >= b.y
-                and y < b.y + b.h
-                then
+                and y < b.y + b.h then
 
                     b.action()
 
@@ -804,21 +834,24 @@ local function monitorLoop()
 
 end
 
--- =========================================================
--- BOUCLE CLAVIER
--- =========================================================
+--------------------------------------------------
+-- CLAVIER
+--------------------------------------------------
 
 local function keyboardLoop()
 
     while true do
 
-        local event, key =
+        local event,
+              key =
             os.pullEvent("key")
 
         if key == keys.t then
+
             tasks()
 
         elseif key == keys.r then
+
             reports()
 
         elseif key == keys.a
@@ -839,9 +872,9 @@ local function keyboardLoop()
 
 end
 
--- =========================================================
+--------------------------------------------------
 -- DEMARRAGE
--- =========================================================
+--------------------------------------------------
 
 if not login() then
     return

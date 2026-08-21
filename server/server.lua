@@ -1,11 +1,7 @@
--- =========================================================
--- BOREALIS OS - SERVEUR
--- =========================================================
-
 local modem = peripheral.find("modem")
 
 if not modem then
-    error("Aucun modem detecte !")
+    error("Aucun modem detecte")
 end
 
 local modemSide = peripheral.getName(modem)
@@ -16,25 +12,13 @@ local DATABASE = "accounts.db"
 
 local accounts = {}
 
--- =========================================================
--- HASH
--- =========================================================
-
-local function hashPassword(password)
-    return textutils.sha256(password)
-end
-
--- =========================================================
+--------------------------------------------------
 -- SAUVEGARDE
--- =========================================================
+--------------------------------------------------
 
 local function saveAccounts()
 
     local file = fs.open(DATABASE, "w")
-
-    if not file then
-        error("Impossible d'ouvrir la base de donnees")
-    end
 
     file.write(
         textutils.serialize(accounts)
@@ -44,9 +28,9 @@ local function saveAccounts()
 
 end
 
--- =========================================================
+--------------------------------------------------
 -- CHARGEMENT
--- =========================================================
+--------------------------------------------------
 
 local function loadAccounts()
 
@@ -55,12 +39,8 @@ local function loadAccounts()
         accounts = {
 
             root = {
-
-                password =
-                    hashPassword("CHANGE-MOI"),
-
+                password = "CHANGE-MOI",
                 role = "root"
-
             }
 
         }
@@ -68,33 +48,24 @@ local function loadAccounts()
         saveAccounts()
 
         print("")
-        print("================================")
-        print("       BOREALIS SERVER")
-        print("================================")
+        print("==============================")
+        print("      BOREALIS SERVER")
+        print("==============================")
         print("")
-        print("COMPTE ROOT CREE")
+        print("Compte root cree")
         print("")
         print("Utilisateur : root")
         print("Mot de passe : CHANGE-MOI")
         print("")
-        print("CHANGE CE MOT DE PASSE !")
-        print("")
-        print("================================")
+        print("==============================")
         print("")
 
         return
-
     end
 
-    local file =
-        fs.open(DATABASE, "r")
+    local file = fs.open(DATABASE, "r")
 
-    if not file then
-        error("Impossible de lire accounts.db")
-    end
-
-    local data =
-        file.readAll()
+    local data = file.readAll()
 
     file.close()
 
@@ -102,45 +73,35 @@ local function loadAccounts()
         textutils.unserialize(data)
 
     if not accounts then
-        error("Base de comptes corrompue !")
+        error("accounts.db est corrompu")
     end
 
 end
 
--- =========================================================
+--------------------------------------------------
 -- LOGIN
--- =========================================================
+--------------------------------------------------
 
-local function login(
-    username,
-    password
-)
+local function login(username, password)
 
     local account =
         accounts[username]
 
     if not account then
-
-        return false,
-            "Compte inexistant"
-
+        return false, "Compte inexistant"
     end
 
     if account.password ~= password then
-
-        return false,
-            "Mot de passe incorrect"
-
+        return false, "Mot de passe incorrect"
     end
 
-    return true,
-        account.role
+    return true, account.role
 
 end
 
--- =========================================================
+--------------------------------------------------
 -- CREATION COMPTE
--- =========================================================
+--------------------------------------------------
 
 local function createAccount(
     username,
@@ -148,73 +109,64 @@ local function createAccount(
     role
 )
 
-    if not username
+    if username == nil
     or username == "" then
 
-        return false,
-            "Nom invalide"
+        return false, "Nom invalide"
 
     end
 
-    if not password
+    if password == nil
     or password == "" then
 
-        return false,
-            "Mot de passe invalide"
+        return false, "Mot de passe invalide"
 
     end
 
     if accounts[username] then
-
-        return false,
-            "Ce compte existe deja"
-
+        return false, "Compte deja existant"
     end
 
     if role ~= "user"
     and role ~= "admin"
     and role ~= "root" then
 
-        return false,
-            "Role invalide"
+        return false, "Role invalide"
 
     end
 
     accounts[username] = {
 
-        password =
-            hashPassword(password),
-
+        password = password,
         role = role
 
     }
 
     saveAccounts()
 
-    return true,
-        "Compte cree"
+    return true, "Compte cree"
 
 end
 
--- =========================================================
+--------------------------------------------------
 -- DEMARRAGE
--- =========================================================
+--------------------------------------------------
 
 loadAccounts()
 
-print("================================")
-print("       BOREALIS SERVER")
-print("================================")
+print("==============================")
+print("      BOREALIS SERVER")
+print("==============================")
 print("")
 print("Modem : " .. modemSide)
-print("ID du serveur : " .. os.getComputerID())
+print("ID : " .. os.getComputerID())
 print("")
-print("Serveur pret.")
+print("Serveur pret")
 print("")
 
--- =========================================================
--- BOUCLE SERVEUR
--- =========================================================
+--------------------------------------------------
+-- SERVEUR
+--------------------------------------------------
 
 while true do
 
@@ -225,9 +177,9 @@ while true do
 
     if type(message) == "table" then
 
-        -- =================================================
+        --------------------------------------------------
         -- PING
-        -- =================================================
+        --------------------------------------------------
 
         if message.action == "ping" then
 
@@ -239,9 +191,9 @@ while true do
                 "borealis"
             )
 
-        -- =================================================
+        --------------------------------------------------
         -- LOGIN
-        -- =================================================
+        --------------------------------------------------
 
         elseif message.action == "login" then
 
@@ -255,21 +207,16 @@ while true do
             rednet.send(
                 sender,
                 {
-                    action =
-                        "login_result",
-
-                    success =
-                        success,
-
-                    result =
-                        result
+                    action = "login_result",
+                    success = success,
+                    result = result
                 },
                 "borealis"
             )
 
-        -- =================================================
-        -- CREER COMPTE
-        -- =================================================
+        --------------------------------------------------
+        -- CREATION COMPTE
+        --------------------------------------------------
 
         elseif message.action ==
             "create_account" then
@@ -284,14 +231,10 @@ while true do
                 rednet.send(
                     sender,
                     {
-                        action =
-                            "create_result",
-
-                        success =
-                            false,
-
+                        action = "create_result",
+                        success = false,
                         result =
-                            "Compte demandeur inconnu"
+                            "Demandeur inconnu"
                     },
                     "borealis"
                 )
@@ -302,74 +245,52 @@ while true do
                 rednet.send(
                     sender,
                     {
-                        action =
-                            "create_result",
+                        action = "create_result",
+                        success = false,
+                        result = "Acces refuse"
+                    },
+                    "borealis"
+                )
 
-                        success =
-                            false,
+            elseif message.role == "root"
+            and requester.role ~= "root" then
 
+                rednet.send(
+                    sender,
+                    {
+                        action = "create_result",
+                        success = false,
                         result =
-                            "Acces refuse"
+                            "Seul root peut creer root"
                     },
                     "borealis"
                 )
 
             else
 
-                -- =========================================
-                -- SEUL ROOT PEUT CREER ROOT
-                -- =========================================
-
-                if message.role == "root"
-                and requester.role ~= "root" then
-
-                    rednet.send(
-                        sender,
-                        {
-                            action =
-                                "create_result",
-
-                            success =
-                                false,
-
-                            result =
-                                "Seul root peut creer un root"
-                        },
-                        "borealis"
+                local success,
+                      result =
+                    createAccount(
+                        message.username,
+                        message.password,
+                        message.role
                     )
 
-                else
-
-                    local success,
-                          result =
-                        createAccount(
-                            message.username,
-                            message.password,
-                            message.role
-                        )
-
-                    rednet.send(
-                        sender,
-                        {
-                            action =
-                                "create_result",
-
-                            success =
-                                success,
-
-                            result =
-                                result
-                        },
-                        "borealis"
-                    )
-
-                end
+                rednet.send(
+                    sender,
+                    {
+                        action = "create_result",
+                        success = success,
+                        result = result
+                    },
+                    "borealis"
+                )
 
             end
 
-        -- =================================================
-        -- LISTE DES COMPTES
-        -- =================================================
+        --------------------------------------------------
+        -- LISTE COMPTES
+        --------------------------------------------------
 
         elseif message.action ==
             "list_accounts" then
@@ -393,11 +314,8 @@ while true do
                     table.insert(
                         list,
                         {
-                            username =
-                                username,
-
-                            role =
-                                account.role
+                            username = username,
+                            role = account.role
                         }
                     )
 
@@ -409,11 +327,9 @@ while true do
                         action =
                             "accounts_result",
 
-                        success =
-                            true,
+                        success = true,
 
-                        accounts =
-                            list
+                        accounts = list
                     },
                     "borealis"
                 )
@@ -426,11 +342,9 @@ while true do
                         action =
                             "accounts_result",
 
-                        success =
-                            false,
+                        success = false,
 
-                        result =
-                            "Acces refuse"
+                        result = "Acces refuse"
                     },
                     "borealis"
                 )
