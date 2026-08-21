@@ -12,10 +12,6 @@ local DATABASE = "accounts.db"
 
 local accounts = {}
 
---------------------------------------------------
--- SAUVEGARDE
---------------------------------------------------
-
 local function saveAccounts()
 
     local file = fs.open(DATABASE, "w")
@@ -28,10 +24,6 @@ local function saveAccounts()
 
 end
 
---------------------------------------------------
--- CHARGEMENT
---------------------------------------------------
-
 local function loadAccounts()
 
     if not fs.exists(DATABASE) then
@@ -39,7 +31,7 @@ local function loadAccounts()
         accounts = {
 
             root = {
-                password = "CHANGE-MOI",
+                password = "1234",
                 role = "root"
             }
 
@@ -55,7 +47,7 @@ local function loadAccounts()
         print("Compte root cree")
         print("")
         print("Utilisateur : root")
-        print("Mot de passe : CHANGE-MOI")
+        print("Mot de passe : 1234")
         print("")
         print("==============================")
         print("")
@@ -78,10 +70,6 @@ local function loadAccounts()
 
 end
 
---------------------------------------------------
--- LOGIN
---------------------------------------------------
-
 local function login(username, password)
 
     local account =
@@ -98,10 +86,6 @@ local function login(username, password)
     return true, account.role
 
 end
-
---------------------------------------------------
--- CREATION COMPTE
---------------------------------------------------
 
 local function createAccount(
     username,
@@ -148,10 +132,6 @@ local function createAccount(
 
 end
 
---------------------------------------------------
--- DEMARRAGE
---------------------------------------------------
-
 loadAccounts()
 
 print("==============================")
@@ -164,10 +144,6 @@ print("")
 print("Serveur pret")
 print("")
 
---------------------------------------------------
--- SERVEUR
---------------------------------------------------
-
 while true do
 
     local sender,
@@ -176,10 +152,6 @@ while true do
         rednet.receive("borealis")
 
     if type(message) == "table" then
-
-        --------------------------------------------------
-        -- PING
-        --------------------------------------------------
 
         if message.action == "ping" then
 
@@ -190,10 +162,6 @@ while true do
                 },
                 "borealis"
             )
-
-        --------------------------------------------------
-        -- LOGIN
-        --------------------------------------------------
 
         elseif message.action == "login" then
 
@@ -213,10 +181,6 @@ while true do
                 },
                 "borealis"
             )
-
-        --------------------------------------------------
-        -- CREATION COMPTE
-        --------------------------------------------------
 
         elseif message.action ==
             "create_account" then
@@ -287,10 +251,6 @@ while true do
                 )
 
             end
-
-        --------------------------------------------------
-        -- LISTE COMPTES
-        --------------------------------------------------
 
         elseif message.action ==
             "list_accounts" then

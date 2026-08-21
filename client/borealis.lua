@@ -30,10 +30,6 @@ local currentRole = nil
 
 local SERVER_ID = nil
 
---------------------------------------------------
--- SERVEUR
---------------------------------------------------
-
 local function findServer()
 
     rednet.broadcast(
@@ -81,10 +77,6 @@ local function findServer()
 
 end
 
---------------------------------------------------
--- AFFICHAGE
---------------------------------------------------
-
 local function clear()
 
     screen.setBackgroundColor(
@@ -123,10 +115,6 @@ local function center(text, y)
     write(text, x, y)
 
 end
-
---------------------------------------------------
--- BOUTONS
---------------------------------------------------
 
 local function addButton(
     name,
@@ -188,10 +176,6 @@ local function addButton(
 
 end
 
---------------------------------------------------
--- SAISIE
---------------------------------------------------
-
 local function input(
     prompt,
     password
@@ -216,20 +200,12 @@ local function input(
     )
 
     if password then
-
         return read("*")
-
     else
-
         return read()
-
     end
 
 end
-
---------------------------------------------------
--- LOGIN
---------------------------------------------------
 
 local function login()
 
@@ -273,9 +249,7 @@ local function login()
 
                     local event,
                           key =
-                        os.pullEvent(
-                            "key"
-                        )
+                        os.pullEvent("key")
 
                     if key == keys.r then
                         break
@@ -365,10 +339,6 @@ local function login()
     end
 
 end
-
---------------------------------------------------
--- ACCUEIL
---------------------------------------------------
 
 local function home()
 
@@ -467,10 +437,6 @@ local function home()
 
 end
 
---------------------------------------------------
--- TACHES
---------------------------------------------------
-
 function tasks()
 
     buttons = {}
@@ -499,10 +465,6 @@ function tasks()
 
 end
 
---------------------------------------------------
--- RAPPORTS
---------------------------------------------------
-
 function reports()
 
     buttons = {}
@@ -530,10 +492,6 @@ function reports()
     )
 
 end
-
---------------------------------------------------
--- COMPTES
---------------------------------------------------
 
 function accounts()
 
@@ -580,10 +538,6 @@ function accounts()
     )
 
 end
-
---------------------------------------------------
--- CREATION
---------------------------------------------------
 
 function createAccount()
 
@@ -713,10 +667,6 @@ function createAccount()
 
 end
 
---------------------------------------------------
--- LISTE
---------------------------------------------------
-
 function listAccounts()
 
     rednet.send(
@@ -791,10 +741,6 @@ function listAccounts()
 
 end
 
---------------------------------------------------
--- TACTILE
---------------------------------------------------
-
 local function monitorLoop()
 
     while true do
@@ -834,10 +780,6 @@ local function monitorLoop()
 
 end
 
---------------------------------------------------
--- CLAVIER
---------------------------------------------------
-
 local function keyboardLoop()
 
     while true do
@@ -872,10 +814,6 @@ local function keyboardLoop()
 
 end
 
---------------------------------------------------
--- DEMARRAGE
---------------------------------------------------
-
 if not login() then
     return
 end
@@ -883,11 +821,7 @@ end
 home()
 
 if monitor then
-
     monitorLoop()
-
 else
-
     keyboardLoop()
-
 end
