@@ -10,16 +10,21 @@ end
 
 local width, height = monitor.getSize()
 
+UI.basalt = basalt
+UI.width = width
+UI.height = height
+
 UI.frame = basalt.createFrame()
 UI.frame:setTerm(monitor)
 UI.frame:setBackground(colors.black)
 
-function UI.clear()
-    local children = UI.frame:getChildren()
+function UI.newFrame()
 
-    for _, child in ipairs(children) do
-        child:destroy()
-    end
+    UI.frame = basalt.createFrame()
+    UI.frame:setTerm(monitor)
+    UI.frame:setBackground(colors.black)
+
+    return UI.frame
 end
 
 function UI.header(title)
@@ -69,7 +74,5 @@ function UI.getSize()
     return width, height
 
 end
-
-UI.basalt = basalt
 
 return UI
