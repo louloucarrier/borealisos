@@ -15,7 +15,11 @@ UI.frame:setTerm(monitor)
 UI.frame:setBackground(colors.black)
 
 function UI.clear()
-    UI.frame:removeChildren()
+    local children = UI.frame:getChildren()
+
+    for _, child in ipairs(children) do
+        child:destroy()
+    end
 end
 
 function UI.header(title)
