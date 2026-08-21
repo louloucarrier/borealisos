@@ -1,79 +1,77 @@
 local basalt = dofile("basalt.lua")
 
-local monitor = peripheral.find("monitor")
+local monitor = peripheral.wrap("left")
 
 if not monitor then
-    error("Aucun monitor detecte !")
+    error("Monitor introuvable sur left")
 end
-
-local frame = basalt.createFrame()
-frame:setTerm(monitor)
-frame:setBackground(colors.black)
 
 local width, height = monitor.getSize()
 
--- ==================================================
--- DECLARATIONS
--- ==================================================
-
-local home
-local tasks
-local employees
-local reports
-local music
-local admin
+local page = "home"
 
 -- ==================================================
--- OUTILS
+-- AFFICHAGE
 -- ==================================================
 
 local function clear()
-    local children = frame:getChildren()
+    monitor.clear()
+    monitor.setCursorPos(1, 1)
+end
 
-    for _, child in ipairs(children) do
-        child:destroy()
+local function text(txt, x, y)
+    monitor.setCursorPos(x, y)
+    monitor.write(txt)
+end
+
+local function center(txt, y)
+
+    local x = math.floor((width - #txt) / 2) + 1
+
+    if x < 1 then
+        x = 1
     end
+
+    text(txt, x, y)
+
 end
 
-local function addLabel(text, x, y, color)
+-- ==================================================
+-- BOUTON
+-- ==================================================
 
-    local l = frame:addLabel()
+local buttons = {}
 
-    l:setText(text)
-    l:setPosition(x, y)
+local function addButton(name, x, y, w, h, action)
 
-    if color then
-        l:setForeground(color)
+    table.insert(buttons, {
+        name = name,
+        x = x,
+        y = y,
+        w = w,
+        h = h,
+        action = action
+    })
+
+    for yy = y, y + h - 1 do
+
+        monitor.setCursorPos(x, yy)
+
+        monitor.write(
+            string.rep(" ", w)
+        )
+
     end
 
-    return l
-end
+    local tx = x + math.floor((w - #name) / 2)
 
-local function addButton(text, x, y, w, h, callback)
+    if tx < x then
+        tx = x
+    end
 
-    local b = frame:addButton()
+    monitor.setCursorPos(tx, y + math.floor(h / 2))
 
-    b:setText(text)
-    b:setPosition(x, y)
-    b:setSize(w, h)
-
-    b:onClick(function()
-        callback()
-    end)
-
-    return b
-end
-
-local function backButton()
-
-    addButton(
-        "< RETOUR",
-        2,
-        height - 3,
-        14,
-        2,
-        home
-    )
+    monitor.write(name)
 
 end
 
@@ -81,79 +79,73 @@ end
 -- ACCUEIL
 -- ==================================================
 
-home = function()
+local function home()
+
+    page = "home"
+
+    buttons = {}
 
     clear()
 
-    addLabel(
-        "BOREALIS OS",
-        2,
-        1,
-        colors.cyan
-    )
+    center("BOREALIS OS", 2)
 
-    addLabel(
-        "SERVEUR : ONLINE",
-        2,
-        3,
-        colors.lime
-    )
+    center("SERVEUR : ONLINE", 4)
 
-    local buttonWidth = math.floor((width - 6) / 2)
-
-    -- TACHES
+    local w = math.floor((width - 6) / 2)
 
     addButton(
         "TACHES",
         2,
-        6,
-        buttonWidth,
+        7,
+        w,
         3,
-        tasks
+        function()
+            tasks()
+        end
     )
-
-    -- EMPLOYES
 
     addButton(
         "EMPLOYES",
-        buttonWidth + 4,
-        6,
-        buttonWidth,
+        w + 4,
+        7,
+        w,
         3,
-        employees
+        function()
+            employees()
+        end
     )
-
-    -- RAPPORTS
 
     addButton(
         "RAPPORTS",
         2,
-        11,
-        buttonWidth,
+        12,
+        w,
         3,
-        reports
+        function()
+            reports()
+        end
     )
-
-    -- MUSIQUE
 
     addButton(
         "MUSIQUE",
-        buttonWidth + 4,
-        11,
-        buttonWidth,
+        w + 4,
+        12,
+        w,
         3,
-        music
+        function()
+            music()
+        end
     )
 
-    -- ADMINISTRATION
-
     addButton(
-        "ADMINISTRATION",
+        "ADMIN",
         2,
-        16,
-        buttonWidth,
+        17,
+        w,
         3,
-        admin
+        function()
+            admin()
+        end
     )
 
 end
@@ -162,32 +154,28 @@ end
 -- TACHES
 -- ==================================================
 
-tasks = function()
+function tasks()
+
+    page = "tasks"
+
+    buttons = {}
 
     clear()
 
-    addLabel(
-        "TACHES",
-        2,
-        1,
-        colors.cyan
-    )
+    center("TACHES", 2)
 
-    addLabel(
-        "MES TACHES",
-        2,
-        4,
-        colors.white
-    )
+    text("MES TACHES", 2, 5)
 
-    addLabel(
-        "[ ] Aucune tache",
-        2,
-        6,
-        colors.orange
-    )
+    text("[ ] Aucune tache", 2, 7)
 
-    backButton()
+    addButton(
+        "RETOUR",
+        2,
+        height - 2,
+        12,
+        2,
+        home
+    )
 
 end
 
@@ -195,32 +183,28 @@ end
 -- EMPLOYES
 -- ==================================================
 
-employees = function()
+function employees()
+
+    page = "employees"
+
+    buttons = {}
 
     clear()
 
-    addLabel(
-        "EMPLOYES",
-        2,
-        1,
-        colors.cyan
-    )
+    center("EMPLOYES", 2)
 
-    addLabel(
-        "EMPLOYES CONNECTES",
-        2,
-        4,
-        colors.white
-    )
+    text("EMPLOYES CONNECTES", 2, 5)
 
-    addLabel(
-        "Aucun employe connecte.",
-        2,
-        6,
-        colors.orange
-    )
+    text("Aucun employe", 2, 7)
 
-    backButton()
+    addButton(
+        "RETOUR",
+        2,
+        height - 2,
+        12,
+        2,
+        home
+    )
 
 end
 
@@ -228,50 +212,37 @@ end
 -- RAPPORTS
 -- ==================================================
 
-reports = function()
+function reports()
+
+    page = "reports"
+
+    buttons = {}
 
     clear()
 
-    addLabel(
-        "RAPPORTS",
-        2,
-        1,
-        colors.cyan
-    )
+    center("RAPPORTS", 2)
 
-    addLabel(
-        "RAPPORTS DE LA BASE",
-        2,
-        4,
-        colors.white
-    )
-
-    addLabel(
-        "Aucun rapport disponible.",
-        2,
-        6,
-        colors.orange
-    )
+    text("Aucun rapport disponible.", 2, 5)
 
     addButton(
-        "NOUVEAU RAPPORT",
+        "NOUVEAU",
         2,
-        9,
-        20,
+        8,
+        15,
         3,
         function()
-
-            addLabel(
-                "Rapport cree !",
-                2,
-                13,
-                colors.lime
-            )
-
+            text("Rapport cree !", 2, 12)
         end
     )
 
-    backButton()
+    addButton(
+        "RETOUR",
+        2,
+        height - 2,
+        12,
+        2,
+        home
+    )
 
 end
 
@@ -279,58 +250,48 @@ end
 -- MUSIQUE
 -- ==================================================
 
-music = function()
+function music()
+
+    page = "music"
+
+    buttons = {}
 
     clear()
 
-    addLabel(
-        "MUSIQUE",
-        2,
-        1,
-        colors.cyan
-    )
+    center("MUSIQUE", 2)
 
-    addLabel(
-        "LECTEUR BOREALIS",
-        2,
-        4,
-        colors.white
-    )
-
-    addLabel(
-        "Aucune musique.",
-        2,
-        6,
-        colors.orange
-    )
+    text("Aucune musique.", 2, 5)
 
     addButton(
         "LECTURE",
         2,
-        9,
+        8,
         12,
         3,
         function()
-
-            print("Lecture demandee")
-
+            text("Lecture...", 2, 13)
         end
     )
 
     addButton(
         "STOP",
         16,
-        9,
+        8,
         12,
         3,
         function()
-
-            print("Stop demande")
-
+            text("Arret.", 2, 13)
         end
     )
 
-    backButton()
+    addButton(
+        "RETOUR",
+        2,
+        height - 2,
+        12,
+        2,
+        home
+    )
 
 end
 
@@ -338,51 +299,46 @@ end
 -- ADMINISTRATION
 -- ==================================================
 
-admin = function()
+function admin()
+
+    page = "admin"
+
+    buttons = {}
 
     clear()
 
-    addLabel(
-        "ADMINISTRATION",
-        2,
-        1,
-        colors.red
-    )
-
-    addLabel(
-        "PANNEAU ADMINISTRATEUR",
-        2,
-        4,
-        colors.white
-    )
+    center("ADMINISTRATION", 2)
 
     addButton(
-        "CREER UNE TACHE",
+        "CREER TACHE",
         2,
-        7,
-        22,
+        6,
+        20,
         3,
         function()
-
-            print("Creation d'une tache")
-
+            text("Creation de tache", 2, 11)
         end
     )
 
     addButton(
-        "GERER EMPLOYES",
+        "EMPLOYES",
         2,
+        11,
+        20,
+        3,
+        function()
+            text("Gestion des employes", 2, 16)
+        end
+    )
+
+    addButton(
+        "RETOUR",
+        2,
+        height - 2,
         12,
-        22,
-        3,
-        function()
-
-            print("Gestion des employes")
-
-        end
+        2,
+        home
     )
-
-    backButton()
 
 end
 
@@ -392,4 +348,32 @@ end
 
 home()
 
-basalt.run()
+-- ==================================================
+-- BOUCLE TACTILE
+-- ==================================================
+
+while true do
+
+    local event, side, x, y =
+        os.pullEvent("monitor_touch")
+
+    if side == "left" then
+
+        for _, b in ipairs(buttons) do
+
+            if x >= b.x
+            and x < b.x + b.w
+            and y >= b.y
+            and y < b.y + b.h then
+
+                b.action()
+
+                break
+
+            end
+
+        end
+
+    end
+
+end
